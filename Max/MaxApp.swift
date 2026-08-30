@@ -1,17 +1,15 @@
-//
-//  MaxApp.swift
-//  Max
-//
-//  Created by Santiago Jojoa on 29/08/26.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct MaxApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
+                .onAppear {
+                    NotificationManager.shared.requestAuthorization()
+                }
         }
+        .modelContainer(for: [Transaction.self, Budget.self, CreditCard.self, CardTransaction.self])
     }
 }
