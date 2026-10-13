@@ -66,6 +66,14 @@ struct CreditCardsView: View {
             .navigationTitle("Tarjetas")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    NavigationLink {
+                        CardPurchasesView()
+                    } label: {
+                        Image(systemName: "list.bullet.rectangle")
+                    }
+                    .accessibilityLabel("Historial de compras con tarjeta")
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingAddCard = true

@@ -20,10 +20,14 @@ struct AddCardTransactionView: View {
     @State private var category: String = ""
     @State private var date: Date = .now
     @State private var note: String = ""
+    @State private var installments: Int = 1
 
     @Query(filter: #Predicate<Category> { !$0.isRemoved }, sort: \Category.name) private var allCategories: [Category]
     private var purchaseCategories: [String] {
-        allCategories.filter { $0.scope == .card }.map { $0.name }
+        var seen = Set<String>()
+        var names = allCategories.filter { $0.scope == .card || $0.scope == .expense }.map(\.name).filter { seen.insert($0.lowercased()).inserted }
+        if !category.isEmpty && !names.contains(category) { names.append(category) }
+        return names
     }
 
     private var isEditing: Bool { transactionToEdit != nil }
@@ -58,6 +62,18 @@ struct AddCardTransactionView: View {
                     .listRowBackground(Color.appCardBackground)
                 }
 
+                if type == .purchase {
+                    Stepper(value: $installments, in: 1...120) {
+                        HStack {
+                            Text("Cuotas")
+                            Spacer()
+                            Text(installments == 1 ? "1 pago" : "\(installments) cuotas")
+                                .foregroundStyle(Color.appTextSecondary)
+                        }
+                    }
+                    .listRowBackground(Color.appCardBackground)
+                }
+
                 DatePicker("Fecha", selection: $date, displayedComponents: .date)
                 .listRowBackground(Color.appCardBackground)
 
@@ -84,6 +100,7 @@ struct AddCardTransactionView: View {
                     category = transaction.category
                     date = transaction.date
                     note = transaction.note
+                    installments = max(transaction.installments, 1)
                 }
             }
         }
@@ -97,10 +114,12 @@ struct AddCardTransactionView: View {
             transaction.category = finalCategory
             transaction.date = date
             transaction.note = note
+            transaction.installments = type == .purchase ? installments : 1
             transaction.updatedAt = .now
             transaction.needsSync = true
         } else {
             let transaction = CardTransaction(amount: amount, type: type, category: finalCategory, date: date, note: note, card: card)
+            transaction.installments = type == .purchase ? installments : 1
             modelContext.insert(transaction)
         }
         dismiss()

@@ -8,6 +8,7 @@ alter table public.savings_goals add column if not exists target_date timestampt
 alter table public.credit_cards  add column if not exists payment_day integer;
 alter table public.transactions  add column if not exists account_id uuid;
 alter table public.transactions  add column if not exists receipt_path text;
+alter table public.card_transactions add column if not exists installments integer not null default 1;
 
 -- 2) Cuentas (banco, ahorros, efectivo) ------------------------------------------------
 create table if not exists public.accounts (

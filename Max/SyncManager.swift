@@ -166,9 +166,10 @@ final class SyncManager {
         var note: String
         var isRemoved: Bool
         var updatedAt: Date
+        var installments: Int?
 
         enum CodingKeys: String, CodingKey {
-            case id, amount, type, category, date, note
+            case id, amount, type, category, date, note, installments
             case cardId = "card_id"
             case isRemoved = "is_deleted"
             case updatedAt = "updated_at"
@@ -190,7 +191,8 @@ final class SyncManager {
                 date: transaction.date,
                 note: transaction.note,
                 isRemoved: transaction.isRemoved,
-                updatedAt: transaction.updatedAt
+                updatedAt: transaction.updatedAt,
+                installments: transaction.installments
             )
             try await supabase.from("card_transactions").upsert(dto).execute()
             transaction.remoteID = id
@@ -228,6 +230,7 @@ final class SyncManager {
                     local.category = remote.category
                     local.date = remote.date
                     local.note = remote.note
+                    local.installments = remote.installments ?? 1
                     local.isRemoved = remote.isRemoved
                     local.updatedAt = remote.updatedAt
                     if let card = cardsByRemoteID[remote.cardId] {

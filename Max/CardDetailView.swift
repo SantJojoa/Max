@@ -108,6 +108,11 @@ struct CardDetailView: View {
                                 Text(transaction.date, format: .dateTime.day().month().year())
                                     .font(.caption)
                                     .foregroundStyle(Color.appTextSecondary)
+                                if transaction.type == .purchase && transaction.installments > 1 {
+                                    Text("\(transaction.installments) cuotas de \(CurrencyFormat.string(for: transaction.installmentValue, decimals: 0))")
+                                        .font(.caption2.weight(.medium))
+                                        .foregroundStyle(Color.appBlue)
+                                }
                             }
                             Spacer()
                             Text("\(transaction.type == .payment ? "+" : "-")\(CurrencyFormat.string(for: transaction.amount))")
@@ -131,6 +136,14 @@ struct CardDetailView: View {
         .navigationTitle(card.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink {
+                    CardPurchasesView(onlyCard: card)
+                } label: {
+                    Image(systemName: "list.bullet.rectangle")
+                }
+                .accessibilityLabel("Historial de compras")
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button {

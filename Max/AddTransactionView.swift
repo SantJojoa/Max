@@ -27,6 +27,9 @@ struct AddTransactionView: View {
     private enum PaymentMethod { case cash, card }
     @State private var method: PaymentMethod = .cash
     @State private var selectedCard: CreditCard?
+    @State private var installments = 1
+    @State private var showingCustomInstallments = false
+    @State private var customInstallmentsText = ""
 
     @State private var receiptData: Data?
     @State private var showingScanner = false
@@ -108,6 +111,7 @@ struct AddTransactionView: View {
 
                     if showsMethodSelector && method == .card {
                         cardChips
+                        installmentsRow
                     } else if !accounts.isEmpty {
                         accountChips
                     }
@@ -293,6 +297,79 @@ struct AddTransactionView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(label)
         .sensoryFeedback(.selection, trigger: type)
+    }
+
+    // MARK: - Cuotas
+
+    private static let installmentOptions = [1, 2, 3, 6, 12, 18, 24, 36, 48]
+
+    /// Las opciones predefinidas, más el valor personalizado elegido (por ejemplo 7) en su lugar ordenado.
+    private var installmentChoices: [Int] {
+        Array(Set(Self.installmentOptions + [installments])).sorted()
+    }
+
+    private var installmentsRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Spacing.s) {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.footnote)
+                        .foregroundStyle(Color.appBlue)
+                    ForEach(installmentChoices, id: \.self) { option in
+                        let isSelected = installments == option
+                        Button {
+                            withAnimation(.snappy(duration: 0.2)) { installments = option }
+                        } label: {
+                            Text(option == 1 ? "1 pago" : "\(option)x")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(isSelected ? Color.black : Color.appTextPrimary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(isSelected ? Color.appBlue : Color.appCardBackground, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Button {
+                        customInstallmentsText = Self.installmentOptions.contains(installments) ? "" : String(installments)
+                        showingCustomInstallments = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil")
+                                .font(.caption.weight(.bold))
+                            Text("Otro")
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .foregroundStyle(Color.appTextPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.appCardBackground, in: Capsule())
+                        .overlay { Capsule().strokeBorder(Color.appBlue.opacity(0.5), lineWidth: 1) }
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, Spacing.l)
+            }
+            .alert("Número de cuotas", isPresented: $showingCustomInstallments) {
+                TextField("Ej. 7", text: $customInstallmentsText)
+                    .keyboardType(.numberPad)
+                Button("Aplicar") {
+                    if let value = Int(customInstallmentsText), (1...120).contains(value) {
+                        withAnimation(.snappy(duration: 0.2)) { installments = value }
+                    }
+                }
+                Button("Cancelar", role: .cancel) {}
+            } message: {
+                Text("Escribe cuántas cuotas (de 1 a 120).")
+            }
+
+            if installments > 1 && amount > 0 {
+                Text("\(installments) cuotas de \(CurrencyFormat.string(for: amount / Double(installments), decimals: 0)) · sin intereses")
+                    .font(.caption)
+                    .foregroundStyle(Color.appTextSecondary)
+                    .padding(.horizontal, Spacing.l)
+            }
+        }
     }
 
     // MARK: - Cuenta
@@ -549,6 +626,7 @@ struct AddTransactionView: View {
     private func save() {
         if method == .card, !isEditing, type == .expense, let card = selectedCard {
             let purchase = CardTransaction(amount: amount, type: .purchase, category: category, date: date, note: note, card: card)
+            purchase.installments = installments
             modelContext.insert(purchase)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             dismiss()
