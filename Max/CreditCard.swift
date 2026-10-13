@@ -8,6 +8,7 @@ final class CreditCard {
     var closingDay: Int
     var monthlyInterestRate: Double
     var managementFee: Double
+    var paymentDay: Int = 0
 
     @Relationship(deleteRule: .cascade, inverse: \CardTransaction.card)
     var transactions: [CardTransaction] = []

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct AddTransactionView: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,6 +16,17 @@ struct AddTransactionView: View {
     @State private var note: String = ""
 
     @Query private var budgets: [Budget]
+    @Query(filter: #Predicate<CreditCard> { !$0.isDeleted }, sort: \CreditCard.name) private var cards: [CreditCard]
+
+    private enum PaymentMethod { case cash, card }
+    @State private var method: PaymentMethod = .cash
+    @State private var selectedCard: CreditCard?
+
+    @State private var receiptData: Data?
+    @State private var showingScanner = false
+    @State private var photoItem: PhotosPickerItem?
+    @State private var isReadingReceipt = false
+    @State private var receiptMessage: String?
     @Query private var allTransactions: [Transaction]
     @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
 
@@ -25,6 +37,7 @@ struct AddTransactionView: View {
 
     private var isValid: Bool {
         guard amount > 0 else { return false }
+        if method == .card && !isEditing && selectedCard == nil { return false }
         return !category.isEmpty
     }
 
@@ -45,14 +58,12 @@ struct AddTransactionView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: Spacing.m) {
-                    Picker("Tipo", selection: $type) {
-                        ForEach(TransactionType.allCases, id: \.self) { t in
-                            Text(t.rawValue).tag(t)
-                        }
+                VStack(spacing: Spacing.s) {
+                    controlsRow
+
+                    if showsMethodSelector && method == .card {
+                        cardChips
                     }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, Spacing.l)
 
                     amountDisplay
 
@@ -62,7 +73,8 @@ struct AddTransactionView: View {
 
                     keypad
                 }
-                .padding(.bottom, Spacing.l)
+                .padding(.top, Spacing.s)
+                .padding(.bottom, Spacing.s)
             }
             .scrollIndicators(.hidden)
             .background { AppBackground() }
@@ -75,8 +87,8 @@ struct AddTransactionView: View {
                 .buttonStyle(PrimaryButtonStyle(isDisabled: !isValid))
                 .disabled(!isValid)
                 .padding(.horizontal, Spacing.l)
-                .padding(.vertical, Spacing.s)
-                .background(.bar)
+                .padding(.top, Spacing.s)
+                .padding(.bottom, Spacing.xs)
             }
             .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar transacción" : "Nueva transacción")
@@ -94,12 +106,32 @@ struct AddTransactionView: View {
                     category = transaction.category
                     date = transaction.date
                     note = transaction.note
+                    receiptData = transaction.receiptData
+                }
+            }
+            .sheet(isPresented: $showingScanner) {
+                DocumentScanner { image in
+                    showingScanner = false
+                    Task { await handleReceipt(image) }
+                } onCancel: {
+                    showingScanner = false
+                }
+                .ignoresSafeArea()
+            }
+            .onChange(of: photoItem) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                        await handleReceipt(image)
+                    }
+                    photoItem = nil
                 }
             }
             .onChange(of: type) {
                 if !currentCategories.contains(category) {
                     category = ""
                 }
+                if type == .income { method = .cash }
             }
         }
         .presentationDetents([.large])
@@ -116,12 +148,12 @@ struct AddTransactionView: View {
         VStack(spacing: Spacing.xs) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(currency.symbol)
-                    .font(.system(size: 26, weight: .medium, design: .rounded))
+                    .font(.system(size: 24, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.appTextSecondary)
                 Text(amountText)
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .font(.system(size: 44, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(digits.isEmpty ? Color.appTextSecondary : Color.appTextPrimary)
+                    .foregroundStyle(digits.isEmpty ? Color.appTextSecondary : (type == .income ? Color.appIncome : Color.appTextPrimary))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                     .contentTransition(.numericText())
@@ -129,18 +161,13 @@ struct AddTransactionView: View {
             .animation(.snappy(duration: 0.15), value: digits)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.m)
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Categorías
 
     private var categoryCarousel: some View {
         VStack(alignment: .leading, spacing: Spacing.s) {
-            Text("Categoría")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(Color.appTextSecondary)
-                .padding(.horizontal, Spacing.l)
-
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Spacing.m) {
                     ForEach(currentCategories, id: \.self) { name in
@@ -149,17 +176,15 @@ struct AddTransactionView: View {
                         Button {
                             withAnimation(.snappy(duration: 0.2)) { category = name }
                         } label: {
-                            VStack(spacing: 6) {
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
                                     .fill(selected ? tint.opacity(0.25) : Color.appCardBackground)
-                                    .frame(width: 58, height: 58)
+                                    .frame(width: 50, height: 50)
                                     .overlay {
-                                        Image(systemName: CategoryStyle.symbol(for: name))
-                                            .font(.system(size: 24, weight: .semibold))
-                                            .foregroundStyle(tint)
+                                        CategoryGlyph(name: name, size: 23)
                                     }
                                     .overlay {
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                                             .strokeBorder(selected ? tint.opacity(0.7) : Color.primary.opacity(0.06), lineWidth: selected ? 1.5 : 0.5)
                                     }
                                 Text(name)
@@ -167,7 +192,7 @@ struct AddTransactionView: View {
                                     .foregroundStyle(selected ? Color.appTextPrimary : Color.appTextSecondary)
                                     .lineLimit(1)
                             }
-                            .frame(width: 66)
+                            .frame(width: 60)
                         }
                         .buttonStyle(.plain)
                     }
@@ -175,6 +200,157 @@ struct AddTransactionView: View {
                 .padding(.horizontal, Spacing.l)
             }
         }
+    }
+
+    // MARK: - Tipo (solo íconos)
+
+    private var controlsRow: some View {
+        HStack(spacing: Spacing.s) {
+            typeButton(.expense, icon: "arrow.up.right", tint: .appExpense, label: "Gasto")
+            typeButton(.income, icon: "arrow.down.left", tint: .appIncome, label: "Ingreso")
+
+            if showsMethodSelector {
+                Rectangle()
+                    .fill(Color.appHairline)
+                    .frame(width: 1, height: 26)
+                    .padding(.horizontal, 2)
+                methodButton(.cash, icon: "banknote.fill", label: "Efectivo")
+                methodButton(.card, icon: "creditcard.fill", label: "Tarjeta")
+            }
+        }
+        .padding(.horizontal, Spacing.l)
+    }
+
+    private func typeButton(_ value: TransactionType, icon: String, tint: Color, label: String) -> some View {
+        let selected = type == value
+        return Button {
+            withAnimation(.snappy(duration: 0.2)) { type = value }
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(selected ? Color.white : tint)
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .background(selected ? tint : tint.opacity(0.15), in: RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .sensoryFeedback(.selection, trigger: type)
+    }
+
+    // MARK: - Método de pago (solo íconos)
+
+    private var showsMethodSelector: Bool {
+        type == .expense && !isEditing && !cards.isEmpty
+    }
+
+    private var cardChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.s) {
+                ForEach(cards) { card in
+                    let isSelected = selectedCard === card
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { selectedCard = card }
+                    } label: {
+                        Text(card.name)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(isSelected ? Color.black : Color.appTextPrimary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(isSelected ? Color.appAccent : Color.appCardBackground, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, Spacing.l)
+        }
+    }
+
+    private func methodButton(_ value: PaymentMethod, icon: String, label: String) -> some View {
+        let selected = method == value
+        return Button {
+            withAnimation(.snappy(duration: 0.2)) {
+                method = value
+                if value == .card && selectedCard == nil { selectedCard = cards.first }
+            }
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(selected ? Color.black : Color.appTextSecondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .background(selected ? Color.appAccent : Color.appCardBackground, in: RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .sensoryFeedback(.selection, trigger: method)
+    }
+
+    // MARK: - Recibo
+
+    private var receiptRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "doc.text.viewfinder")
+                .foregroundStyle(Color.appOrange)
+                .frame(width: 24)
+            Text("Recibo")
+
+            Spacer()
+
+            if isReadingReceipt {
+                ProgressView()
+            } else if let receiptData, let image = UIImage(data: receiptData) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 36, height: 36)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Button {
+                    self.receiptData = nil
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.appTextSecondary)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Button {
+                    showingScanner = true
+                } label: {
+                    Image(systemName: "camera.viewfinder")
+                        .font(.system(size: 20))
+                        .frame(width: 40, height: 32)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.appAccent)
+                .accessibilityLabel("Escanear recibo")
+
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Image(systemName: "photo")
+                        .font(.system(size: 20))
+                        .frame(width: 40, height: 32)
+                }
+                .foregroundStyle(Color.appAccent)
+                .accessibilityLabel("Elegir foto del recibo")
+            }
+        }
+        .padding(.horizontal, Spacing.l)
+        .padding(.vertical, 4)
+    }
+
+    @MainActor
+    private func handleReceipt(_ image: UIImage) async {
+        isReadingReceipt = true
+        receiptData = ReceiptReader.compressed(image)
+        let info = await ReceiptReader.read(image, decimals: currency.decimalDigits)
+
+        if amount == 0, let value = info.amount {
+            digits = AmountField.Coordinator.digits(from: value, currency: currency)
+        }
+        if note.isEmpty, let merchant = info.merchant {
+            note = merchant
+        }
+        isReadingReceipt = false
+        UINotificationFeedbackGenerator().notificationOccurred(info.amount == nil ? .warning : .success)
     }
 
     // MARK: - Detalles
@@ -189,7 +365,7 @@ struct AddTransactionView: View {
                     .multilineTextAlignment(.trailing)
             }
             .padding(.horizontal, Spacing.l)
-            .padding(.vertical, 12)
+            .padding(.vertical, 9)
 
             Divider().padding(.leading, 52)
 
@@ -203,7 +379,11 @@ struct AddTransactionView: View {
                     .labelsHidden()
             }
             .padding(.horizontal, Spacing.l)
-            .padding(.vertical, 8)
+            .padding(.vertical, 3)
+
+            Divider().padding(.leading, 52)
+
+            receiptRow
         }
         .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
@@ -214,9 +394,9 @@ struct AddTransactionView: View {
 
     private var keypad: some View {
         let keys: [[String]] = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["00", "0", "⌫"]]
-        return VStack(spacing: Spacing.s) {
+        return VStack(spacing: 10) {
             ForEach(keys, id: \.self) { row in
-                HStack(spacing: Spacing.s) {
+                HStack(spacing: 10) {
                     ForEach(row, id: \.self) { key in
                         Button {
                             press(key)
@@ -227,12 +407,12 @@ struct AddTransactionView: View {
                                         .font(.title3)
                                 } else {
                                     Text(key)
-                                        .font(.system(size: 24, weight: .medium, design: .rounded))
+                                        .font(.system(size: 22, weight: .medium, design: .rounded))
                                 }
                             }
                             .foregroundStyle(Color.appTextPrimary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 52)
+                            .frame(height: 54)
                             .background(Color.appCardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
                         }
@@ -255,16 +435,26 @@ struct AddTransactionView: View {
     }
 
     private func save() {
+        if method == .card, !isEditing, type == .expense, let card = selectedCard {
+            let purchase = CardTransaction(amount: amount, type: .purchase, category: category, date: date, note: note, card: card)
+            modelContext.insert(purchase)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            dismiss()
+            return
+        }
+
         if let transaction = transactionToEdit {
             transaction.amount = amount
             transaction.type = type
             transaction.category = category
             transaction.date = date
             transaction.note = note
+            transaction.receiptData = receiptData
             transaction.updatedAt = .now
             transaction.needsSync = true
         } else {
             let transaction = Transaction(amount: amount, type: type, category: category, date: date, note: note)
+            transaction.receiptData = receiptData
             modelContext.insert(transaction)
         }
 

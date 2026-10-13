@@ -34,7 +34,7 @@ struct AppLockView: View {
                 } label: {
                     if isAuthenticating {
                         ProgressView()
-                            .tint(.white)
+                            .tint(.black)
                             .frame(maxWidth: .infinity)
                     } else {
                         Text("Desbloquear")

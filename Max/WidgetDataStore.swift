@@ -12,4 +12,13 @@ enum WidgetDataStore {
         defaults.set(Date(), forKey: "widget_updatedAt")
         WidgetCenter.shared.reloadAllTimelines()
     }
+
+    static func updateBudget(total: Double, spent: Double, spentToday: Double, dailyAllowance: Double) {
+        guard let defaults = UserDefaults(suiteName: suiteName) else { return }
+        defaults.set(total, forKey: "widget_budget_total")
+        defaults.set(spent, forKey: "widget_budget_spent")
+        defaults.set(spentToday, forKey: "widget_spent_today")
+        defaults.set(dailyAllowance, forKey: "widget_daily_allowance")
+        WidgetCenter.shared.reloadAllTimelines()
+    }
 }

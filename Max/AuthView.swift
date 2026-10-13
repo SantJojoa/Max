@@ -52,7 +52,7 @@ struct AuthView: View {
                         } label: {
                             if isLoading {
                                 ProgressView()
-                                    .tint(.white)
+                                    .tint(.black)
                                     .frame(maxWidth: .infinity)
                             } else {
                                 Text(isSignUp ? "Crear cuenta" : "Iniciar sesión")

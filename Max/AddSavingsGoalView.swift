@@ -9,6 +9,8 @@ struct AddSavingsGoalView: View {
 
     @State private var name: String = ""
     @State private var target: Double = 0
+    @State private var hasDeadline = false
+    @State private var deadline: Date = Calendar.current.date(byAdding: .month, value: 6, to: .now) ?? .now
 
     private var isEditing: Bool { goalToEdit != nil }
     private var isValid: Bool {
@@ -23,6 +25,18 @@ struct AddSavingsGoalView: View {
                 .listRowBackground(Color.appCardBackground)
 
                 AmountField(placeholder: "Monto objetivo", value: $target)
+                .listRowBackground(Color.appCardBackground)
+
+                Section {
+                    Toggle("Fecha límite", isOn: $hasDeadline.animation())
+                    if hasDeadline {
+                        DatePicker("Quiero lograrlo el", selection: $deadline, in: Date.now..., displayedComponents: .date)
+                    }
+                } footer: {
+                    if hasDeadline {
+                        Text("Te diremos cuánto aportar cada mes para llegar a tiempo.")
+                    }
+                }
                 .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
@@ -43,6 +57,10 @@ struct AddSavingsGoalView: View {
                 if let goal = goalToEdit {
                     name = goal.name
                     target = goal.targetAmount
+                    if let date = goal.targetDate {
+                        hasDeadline = true
+                        deadline = date
+                    }
                 }
             }
         }
@@ -54,10 +72,12 @@ struct AddSavingsGoalView: View {
         if let goal = goalToEdit {
             goal.name = trimmedName
             goal.targetAmount = target
+            goal.targetDate = hasDeadline ? deadline : nil
             goal.updatedAt = .now
             goal.needsSync = true
         } else {
             let goal = SavingsGoal(name: trimmedName, targetAmount: target)
+            goal.targetDate = hasDeadline ? deadline : nil
             modelContext.insert(goal)
         }
         dismiss()

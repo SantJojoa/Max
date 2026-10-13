@@ -60,6 +60,9 @@ struct CreditCardsView: View {
                 }
             }
             .background { AppBackground() }
+            .task(id: cards.map { "\($0.name)|\($0.closingDay)|\($0.paymentDay)" }.joined(separator: ";")) {
+                NotificationManager.shared.scheduleCardReminders(cards)
+            }
             .navigationTitle("Tarjetas")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -67,9 +70,7 @@ struct CreditCardsView: View {
                     Button {
                         showingAddCard = true
                     } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Color.appAccent)
+                        Image(systemName: "plus")
                     }
                 }
             }

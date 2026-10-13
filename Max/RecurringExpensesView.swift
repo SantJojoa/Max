@@ -10,6 +10,10 @@ struct RecurringExpensesView: View {
     @State private var showingAdd = false
     @State private var editingItem: RecurringExpense?
 
+    private var reminderSignature: String {
+        items.map { "\($0.name)|\($0.amount)|\($0.dayOfMonth)|\($0.isActive)" }.joined(separator: ";")
+    }
+
     var body: some View {
         Group {
             if items.isEmpty {
@@ -33,6 +37,9 @@ struct RecurringExpensesView: View {
             }
 
             addRow
+        }
+        .task(id: reminderSignature) {
+            NotificationManager.shared.scheduleRecurringReminders(items)
         }
         .sheet(isPresented: $showingAdd) {
             AddRecurringExpenseView()

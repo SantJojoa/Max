@@ -17,6 +17,8 @@ struct ReportsView: View {
 
     @State private var mode: PeriodMode = .year
     @State private var dataMode: DataMode = .cash
+    @State private var shareItem: ShareItem?
+    @State private var exportError: String?
     @State private var selectedYear: Int = Calendar.current.component(.year, from: .now)
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: .now)
 
@@ -143,15 +145,84 @@ struct ReportsView: View {
         .scrollIndicators(.hidden)
         .background { AppBackground() }
         .tint(Color.appAccent)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                sourceMenu
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                exportMenu
+            }
+        }
+        .sheet(item: $shareItem) { item in
+            ShareSheet(url: item.url)
+                .presentationDetents([.medium, .large])
+        }
+        .alert("No se pudo exportar", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportError ?? "")
+        }
+    }
+
+    // MARK: - Fuente (Efectivo / Tarjetas) y exportación
+
+    private var sourceMenu: some View {
+        Button {
+            withAnimation(.snappy(duration: 0.2)) {
+                dataMode = dataMode == .cash ? .card : .cash
+            }
+        } label: {
+            Image(systemName: dataMode == .cash ? "banknote" : "creditcard")
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .sensoryFeedback(.selection, trigger: dataMode)
+        .accessibilityLabel(dataMode == .cash ? "Mostrando efectivo. Cambiar a tarjetas" : "Mostrando tarjetas. Cambiar a efectivo")
+    }
+
+    private var exportMenu: some View {
+        Menu {
+            Button {
+                export(.pdf)
+            } label: {
+                Label("Exportar PDF", systemImage: "doc.richtext")
+            }
+            Button {
+                export(.csv)
+            } label: {
+                Label("Exportar CSV", systemImage: "tablecells")
+            }
+        } label: {
+            Image(systemName: "square.and.arrow.up")
+        }
+        .accessibilityLabel("Exportar reporte")
+    }
+
+    private enum ExportFormat { case pdf, csv }
+
+    private func snapshot() -> ReportSnapshot {
+        var rows: [ReportRow] = cashTransactions(year: selectedYear, month: periodMonth).map {
+            ReportRow(date: $0.date, kind: $0.type.rawValue, source: "Efectivo", category: $0.category, note: $0.note,
+                      amount: $0.amount, isPositive: $0.type == .income)
+        }
+        rows += cardTransactionsInPeriod(year: selectedYear, month: periodMonth).map {
+            ReportRow(date: $0.date, kind: $0.type.rawValue, source: $0.card?.name ?? "Tarjeta", category: $0.category, note: $0.note,
+                      amount: $0.amount, isPositive: $0.type == .payment)
+        }
+        return ReportSnapshot(periodTitle: periodTitle, rows: rows)
+    }
+
+    private func export(_ format: ExportFormat) {
+        do {
+            let snap = snapshot()
+            let url = format == .pdf ? try ReportExporter.pdf(for: snap) : try ReportExporter.csv(for: snap)
+            shareItem = ShareItem(url: url)
+        } catch {
+            exportError = error.localizedDescription
+        }
     }
 
     private var filters: some View {
         VStack(spacing: Spacing.s) {
-            Picker("Datos", selection: $dataMode) {
-                ForEach(DataMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-
             HStack(spacing: Spacing.s) {
                 Menu {
                     Picker("Periodo", selection: $mode) {

@@ -6,6 +6,7 @@ final class SavingsGoal {
     var name: String
     var targetAmount: Double
     var savedAmount: Double
+    var targetDate: Date?
     var remoteID: UUID?
     var updatedAt: Date
     var isDeleted: Bool
@@ -15,6 +16,7 @@ final class SavingsGoal {
         self.name = name
         self.targetAmount = targetAmount
         self.savedAmount = savedAmount
+        self.targetDate = nil
         self.remoteID = nil
         self.updatedAt = .now
         self.isDeleted = false

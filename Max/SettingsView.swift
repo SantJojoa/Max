@@ -30,7 +30,7 @@ struct SettingsView: View {
                     } label: {
                         if syncManager.isSyncing {
                             ProgressView()
-                                .tint(.white)
+                                .tint(.black)
                                 .frame(maxWidth: .infinity)
                         } else {
                             Text("Sincronizar ahora")

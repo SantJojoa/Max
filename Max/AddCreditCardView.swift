@@ -17,6 +17,7 @@ struct AddCreditCardView: View {
     @State private var name: String = ""
     @State private var creditLimit: Double = 0
     @State private var closingDayText: String = ""
+    @State private var paymentDayText: String = ""
     @State private var interestRateText: String = ""
     @State private var managementFee: Double = 0
 
@@ -27,6 +28,7 @@ struct AddCreditCardView: View {
         guard creditLimit > 0 else { return false }
         guard let day = Int(closingDayText), day >= 1, day <= 31 else { return false }
         guard Double(interestRateText) != nil else { return false }
+        if !paymentDayText.isEmpty { guard let p = Int(paymentDayText), p >= 1, p <= 31 else { return false } }
         return true
     }
 
@@ -39,6 +41,9 @@ struct AddCreditCardView: View {
                     AmountField(placeholder: "Cupo total", value: $creditLimit)
 
                     TextField("Día de corte (1-31)", text: $closingDayText)
+                        .keyboardType(.numberPad)
+
+                    TextField("Día límite de pago (1-31, opcional)", text: $paymentDayText)
                         .keyboardType(.numberPad)
 
                     TextField("Tasa de interés mensual (%)", text: $interestRateText)
@@ -67,6 +72,7 @@ struct AddCreditCardView: View {
                     name = card.name
                     creditLimit = card.creditLimit
                     closingDayText = String(card.closingDay)
+                    paymentDayText = card.paymentDay > 0 ? String(card.paymentDay) : ""
                     interestRateText = String(card.monthlyInterestRate)
                     managementFee = card.managementFee
                 }
@@ -82,12 +88,14 @@ struct AddCreditCardView: View {
             card.name = name
             card.creditLimit = creditLimit
             card.closingDay = day
+            card.paymentDay = Int(paymentDayText) ?? 0
             card.monthlyInterestRate = rate
             card.managementFee = managementFee
             card.updatedAt = .now
             card.needsSync = true
         } else {
             let card = CreditCard(name: name, creditLimit: creditLimit, closingDay: day, monthlyInterestRate: rate, managementFee: managementFee)
+            card.paymentDay = Int(paymentDayText) ?? 0
             modelContext.insert(card)
         }
         dismiss()

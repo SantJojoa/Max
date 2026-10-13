@@ -71,6 +71,20 @@ struct SavingsGoalsView: View {
         .listRowSeparator(.hidden)
     }
 
+    private func deadlineHint(for goal: SavingsGoal, isComplete: Bool) -> (text: String, icon: String, tint: Color)? {
+        guard let date = goal.targetDate, !isComplete else { return nil }
+        let remaining = max(0, goal.targetAmount - goal.savedAmount)
+        let calendar = Calendar.current
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: .now), to: calendar.startOfDay(for: date)).day ?? 0
+
+        if days < 0 {
+            return ("Venció el \(date.formatted(.dateTime.day().month().year())). Faltan \(CurrencyFormat.string(for: remaining, decimals: 0))", "exclamationmark.circle.fill", .appExpense)
+        }
+        let months = max(1, Int((Double(days) / 30.0).rounded(.up)))
+        let perMonth = remaining / Double(months)
+        return ("Aporta \(CurrencyFormat.string(for: perMonth, decimals: 0))/mes · \(date.formatted(.dateTime.day().month(.abbreviated).year()))", "calendar", .appBlue)
+    }
+
     @ViewBuilder
     private func goalRow(_ goal: SavingsGoal) -> some View {
         let progress = goal.targetAmount > 0 ? min(goal.savedAmount / goal.targetAmount, 1.0) : 0
@@ -107,6 +121,12 @@ struct SavingsGoalsView: View {
                     .foregroundStyle(Color.appTextSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+                if let hint = deadlineHint(for: goal, isComplete: isComplete) {
+                    Label(hint.text, systemImage: hint.icon)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(hint.tint)
+                        .lineLimit(2)
+                }
                 Button {
                     fundingGoal = goal
                 } label: {

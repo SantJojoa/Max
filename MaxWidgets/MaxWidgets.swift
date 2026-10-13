@@ -50,9 +50,39 @@ private extension Color {
 }
 
 struct MaxWidgetsEntryView: View {
+    @Environment(\.widgetFamily) private var family
     var entry: Provider.Entry
 
     var body: some View {
+        switch family {
+        case .accessoryCircular:
+            Button(intent: QuickAddIntent()) {
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .bold))
+            }
+            .buttonStyle(.plain)
+        case .accessoryRectangular:
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Balance")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(CurrencyFormat.string(for: entry.balance, decimals: 0))
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                Button(intent: QuickAddIntent()) {
+                    Label("Nuevo gasto", systemImage: "plus.circle.fill")
+                        .font(.caption2)
+                }
+                .buttonStyle(.plain)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        default:
+            homeBody
+        }
+    }
+
+    private var homeBody: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -121,7 +151,7 @@ struct MaxWidgets: Widget {
         }
         .configurationDisplayName("Balance de Max")
         .description("Muestra tu balance, ingresos y gastos actuales.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular])
     }
 }
 

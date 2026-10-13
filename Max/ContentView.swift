@@ -4,6 +4,8 @@ import SwiftData
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Transaction> { !$0.isDeleted }, sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    @Query(filter: #Predicate<Budget> { !$0.isDeleted }) private var budgets: [Budget]
+    @Query(filter: #Predicate<CardTransaction> { !$0.isDeleted }) private var cardTransactions: [CardTransaction]
     var onNavigate: (MainTabView.AppTab) -> Void = { _ in }
     @State private var showingAddView = false
     @State private var addType: TransactionType = .expense
@@ -11,6 +13,8 @@ struct ContentView: View {
     @AppStorage("hideBalance") private var hideBalance = false
 
     @State private var searchText = ""
+    @State private var categoryFilter: String?
+    @State private var typeFilter: TransactionType?
     @State private var dateFilter: DateFilter = .all
     @State private var showingCustomRange = false
     @State private var customStart: Date = Calendar.current.date(byAdding: .month, value: -1, to: .now) ?? .now
@@ -67,6 +71,14 @@ struct ContentView: View {
             result = result.filter { $0.date >= customStart && $0.date <= customEnd }
         }
 
+        if let typeFilter {
+            result = result.filter { $0.type == typeFilter }
+        }
+
+        if let categoryFilter {
+            result = result.filter { $0.category == categoryFilter }
+        }
+
         if !searchText.isEmpty {
             result = result.filter {
                 $0.category.localizedCaseInsensitiveContains(searchText) ||
@@ -77,8 +89,75 @@ struct ContentView: View {
         return result
     }
 
+    private var extraFilterCount: Int {
+        (typeFilter == nil ? 0 : 1) + (categoryFilter == nil ? 0 : 1)
+    }
+
     private var isFiltering: Bool {
-        dateFilter != .all
+        dateFilter != .all || extraFilterCount > 0
+    }
+
+    private var availableCategories: [String] {
+        Array(Set(transactions.map(\.category))).sorted()
+    }
+
+    // MARK: - Insight de ritmo de gasto
+
+    private var spendingInsight: (title: String, message: String, icon: String, tint: Color)? {
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: .now)
+        guard let lastMonth = calendar.date(byAdding: .month, value: -1, to: .now) else { return nil }
+        let lm = calendar.component(.month, from: lastMonth)
+        let ly = calendar.component(.year, from: lastMonth)
+
+        let current = currentMonthTransactions
+            .filter { $0.type == .expense }
+            .reduce(0) { $0 + $1.amount }
+        let previous = transactions
+            .filter {
+                $0.type == .expense &&
+                calendar.component(.month, from: $0.date) == lm &&
+                calendar.component(.year, from: $0.date) == ly &&
+                calendar.component(.day, from: $0.date) <= day
+            }
+            .reduce(0) { $0 + $1.amount }
+
+        guard previous > 0, current > 0 else { return nil }
+        let change = (current - previous) / previous
+        let percent = Int((abs(change) * 100).rounded())
+        guard percent >= 1 else {
+            return ("Mismo ritmo que el mes pasado", "Tus gastos van casi iguales a esta altura del mes.", "equal.circle.fill", .appBlue)
+        }
+        if change < 0 {
+            return ("Buen ritmo este mes", "Llevas \(percent)% menos gastos que el mes pasado a esta altura.", "sparkles", .appAccent)
+        }
+        return ("Ojo con el gasto", "Llevas \(percent)% más gastos que el mes pasado a esta altura.", "exclamationmark.triangle.fill", .appOrange)
+    }
+
+    @ViewBuilder
+    private var insightCard: some View {
+        if let insight = spendingInsight {
+            HStack(spacing: 12) {
+                Image(systemName: insight.icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(insight.tint)
+                    .frame(width: 40, height: 40)
+                    .background(insight.tint.opacity(0.18), in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(insight.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .foregroundStyle(Color.appTextPrimary)
+                    Text(insight.message)
+                        .font(.caption)
+                        .foregroundStyle(Color.appTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(Spacing.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(.regular.tint(insight.tint.opacity(0.08)), in: RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
+        }
     }
 
     private var filterTitle: String {
@@ -130,6 +209,15 @@ struct ContentView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))
 
+                if spendingInsight != nil {
+                    Section {
+                        insightCard
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))
+                }
+
                 if filteredTransactions.isEmpty {
                     Section {
                         ContentUnavailableView(
@@ -173,10 +261,8 @@ struct ContentView: View {
                     NavigationLink {
                         SettingsView()
                     } label: {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.title2)
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(Color.appTextSecondary)
+                        Image(systemName: "person.fill")
+                            .foregroundStyle(Color.appTextPrimary)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -191,9 +277,13 @@ struct ContentView: View {
             }
             .onChange(of: transactions) {
                 WidgetDataStore.update(income: totalIncome, expense: totalExpense, balance: balance)
+                updateBudgetWidgets()
             }
+            .onChange(of: budgets) { updateBudgetWidgets() }
+            .onChange(of: cardTransactions) { updateBudgetWidgets() }
             .onAppear {
                 WidgetDataStore.update(income: totalIncome, expense: totalExpense, balance: balance)
+                updateBudgetWidgets()
             }
             .sheet(isPresented: $showingCustomRange) {
                 NavigationStack {
@@ -292,6 +382,33 @@ struct ContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
     }
 
+    // MARK: - Datos para los widgets de presupuesto
+
+    private func updateBudgetWidgets() {
+        let calendar = Calendar.current
+        let month = calendar.component(.month, from: .now)
+        let year = calendar.component(.year, from: .now)
+        let monthBudgets = budgets.filter { $0.month == month && $0.year == year }
+        let total = monthBudgets.reduce(0) { $0 + $1.limitAmount }
+        let categories = Set(monthBudgets.map(\.category))
+        let spent = currentMonthTransactions
+            .filter { $0.type == .expense && categories.contains($0.category) }
+            .reduce(0) { $0 + $1.amount }
+
+        let daysInMonth = calendar.range(of: .day, in: .month, for: .now)?.count ?? 30
+        let daysLeft = max(1, daysInMonth - calendar.component(.day, from: .now) + 1)
+        let allowance = max(0, total - spent) / Double(daysLeft)
+
+        let cashToday = transactions
+            .filter { $0.type == .expense && calendar.isDateInToday($0.date) }
+            .reduce(0) { $0 + $1.amount }
+        let cardToday = cardTransactions
+            .filter { $0.type == .purchase && calendar.isDateInToday($0.date) }
+            .reduce(0) { $0 + $1.amount }
+
+        WidgetDataStore.updateBudget(total: total, spent: spent, spentToday: cashToday + cardToday, dailyAllowance: allowance)
+    }
+
     // MARK: - Acciones rápidas
 
     private var quickActions: some View {
@@ -336,25 +453,53 @@ struct ContentView: View {
 
     private var filterMenu: some View {
         Menu {
-            Button { dateFilter = .all } label: { Label("Todos", systemImage: dateFilter == .all ? "checkmark" : "") }
-            Button { dateFilter = .thisMonth } label: { Label("Este mes", systemImage: dateFilter == .thisMonth ? "checkmark" : "") }
-            Button { dateFilter = .last3Months } label: { Label("Últimos 3 meses", systemImage: dateFilter == .last3Months ? "checkmark" : "") }
-            Button { showingCustomRange = true } label: { Label("Rango personalizado…", systemImage: dateFilter == .custom ? "checkmark" : "") }
+            Section("Periodo") {
+                Button { dateFilter = .all } label: { Label("Todos", systemImage: dateFilter == .all ? "checkmark" : "") }
+                Button { dateFilter = .thisMonth } label: { Label("Este mes", systemImage: dateFilter == .thisMonth ? "checkmark" : "") }
+                Button { dateFilter = .last3Months } label: { Label("Últimos 3 meses", systemImage: dateFilter == .last3Months ? "checkmark" : "") }
+                Button { showingCustomRange = true } label: { Label("Rango personalizado…", systemImage: dateFilter == .custom ? "checkmark" : "") }
+            }
+
+            Menu {
+                Picker("Tipo", selection: $typeFilter) {
+                    Text("Todos").tag(TransactionType?.none)
+                    ForEach(TransactionType.allCases, id: \.self) { Text($0.rawValue).tag(TransactionType?.some($0)) }
+                }
+            } label: {
+                Label("Tipo", systemImage: "arrow.up.arrow.down")
+            }
+
+            Menu {
+                Picker("Categoría", selection: $categoryFilter) {
+                    Text("Todas").tag(String?.none)
+                    ForEach(availableCategories, id: \.self) { Text($0).tag(String?.some($0)) }
+                }
+            } label: {
+                Label("Categoría", systemImage: "tag")
+            }
+
+            if isFiltering {
+                Button(role: .destructive) {
+                    dateFilter = .all
+                    typeFilter = nil
+                    categoryFilter = nil
+                } label: {
+                    Label("Quitar filtros", systemImage: "xmark.circle")
+                }
+            }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "calendar")
                     .font(.footnote)
                     .foregroundStyle(Color.appAccent)
-                Text(filterTitle)
+                Text(extraFilterCount > 0 ? "\(filterTitle) · \(extraFilterCount)" : filterTitle)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(Color.appTextPrimary)
                 Image(systemName: "chevron.down")
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(Color.appTextSecondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .glassEffect(.regular.interactive(), in: Capsule())
+
         }
     }
 

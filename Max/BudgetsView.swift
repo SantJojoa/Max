@@ -74,6 +74,16 @@ struct BudgetsView: View {
         currentBudgets.reduce(0) { $0 + $1.limitAmount }
     }
 
+    /// Días que quedan del mes contando hoy.
+    private var daysLeftInclusive: Int {
+        let range = Calendar.current.range(of: .day, in: .month, for: .now)?.count ?? 30
+        return max(1, range - Calendar.current.component(.day, from: .now) + 1)
+    }
+
+    private var dailyAllowance: Double {
+        max(0, totalLimit - totalSpent) / Double(daysLeftInclusive)
+    }
+
     private var overviewCard: some View {
         let ratio = totalLimit > 0 ? totalSpent / totalLimit : 0
         let tint: Color = ratio >= 1 ? .appExpense : (ratio >= 0.8 ? .appOrange : .appAccent)
@@ -102,6 +112,24 @@ struct BudgetsView: View {
                     .clipShape(Capsule())
             }
             CapsuleProgress(value: ratio, tint: tint, height: 10)
+            if totalLimit > totalSpent {
+                HStack(spacing: 10) {
+                    Image(systemName: "calendar.badge.clock")
+                        .foregroundStyle(Color.appAccent)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Puedes gastar al día")
+                            .font(.caption)
+                            .foregroundStyle(Color.appTextSecondary)
+                        Text(CurrencyFormat.string(for: dailyAllowance))
+                            .font(.system(.headline, design: .rounded, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(Color.appTextPrimary)
+                    }
+                    Spacer()
+                }
+                .padding(Spacing.s)
+                .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+            }
             HStack {
                 Text(totalLimit >= totalSpent
                      ? "Restan \(CurrencyFormat.string(for: totalLimit - totalSpent))"

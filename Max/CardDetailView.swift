@@ -61,6 +61,20 @@ struct CardDetailView: View {
             }
             .listRowBackground(Color.appCardBackground)
 
+            Section {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                    infoTile(icon: "scissors", tint: .appBlue, title: "Próximo corte", value: dateText(nextDate(forDay: card.closingDay)), caption: daysCaption(nextDate(forDay: card.closingDay)))
+                    if card.paymentDay > 0 {
+                        infoTile(icon: "calendar.badge.exclamationmark", tint: .appOrange, title: "Fecha límite de pago", value: dateText(nextDate(forDay: card.paymentDay)), caption: daysCaption(nextDate(forDay: card.paymentDay)))
+                    }
+                    infoTile(icon: "percent", tint: .appExpense, title: "Interés estimado", value: CurrencyFormat.string(for: estimatedInterest, decimals: 0), caption: "si no pagas el total")
+                    infoTile(icon: "banknote", tint: .appAccent, title: "Pago mínimo (est.)", value: CurrencyFormat.string(for: estimatedMinimum, decimals: 0), caption: "interés + manejo + 5%")
+                }
+                .padding(.vertical, 4)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+
             Section("Detalles") {
                 detailRow(title: "Día de corte", value: "\(card.closingDay)")
                 detailRow(title: "Tasa de interés mensual", value: card.monthlyInterestRate.formatted(.number.precision(.fractionLength(1))) + "%")
@@ -130,9 +144,7 @@ struct CardDetailView: View {
                         Label("Registrar pago", systemImage: "creditcard.and.123")
                     }
                 } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(Color.appAccent)
+                    Image(systemName: "plus")
                 }
             }
         }
@@ -145,6 +157,68 @@ struct CardDetailView: View {
         .sheet(item: $editingTransaction) { transaction in
             AddCardTransactionView(card: card, type: transaction.type, transactionToEdit: transaction)
         }
+    }
+
+    // MARK: - Fechas y estimaciones
+
+    private var estimatedInterest: Double {
+        max(0, usedCupo) * card.monthlyInterestRate / 100
+    }
+
+    /// Estimación: intereses + cuota de manejo + 5% del saldo usado. Cada banco define su fórmula real.
+    private var estimatedMinimum: Double {
+        guard usedCupo > 0 else { return 0 }
+        return estimatedInterest + card.managementFee + usedCupo * 0.05
+    }
+
+    private func nextDate(forDay day: Int) -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        for offset in 0...2 {
+            guard let month = calendar.date(byAdding: .month, value: offset, to: today) else { continue }
+            let daysInMonth = calendar.range(of: .day, in: .month, for: month)?.count ?? 30
+            var comps = calendar.dateComponents([.year, .month], from: month)
+            comps.day = min(day, daysInMonth)
+            if let date = calendar.date(from: comps), date >= today { return date }
+        }
+        return today
+    }
+
+    private func dateText(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated))
+    }
+
+    private func daysCaption(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: .now), to: date).day ?? 0
+        if days == 0 { return "Hoy" }
+        return days == 1 ? "Mañana" : "En \(days) días"
+    }
+
+    private func infoTile(icon: String, tint: Color, title: String, value: String, caption: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(tint)
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(Color.appTextSecondary)
+                    .lineLimit(1)
+            }
+            Text(value)
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(Color.appTextPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(caption)
+                .font(.caption2)
+                .foregroundStyle(Color.appTextSecondary)
+        }
+        .padding(Spacing.m)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
     }
 
     @ViewBuilder

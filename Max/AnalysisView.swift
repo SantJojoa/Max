@@ -11,29 +11,34 @@ struct AnalysisView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Picker("Sección", selection: $selection) {
-                    ForEach(Section.allCases, id: \.self) { s in
-                        Text(s.rawValue).tag(s)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, Spacing.s)
-                .tint(Color.appAccent)
-
-                Group {
-                    if selection == .reports {
-                        ReportsView()
-                    } else {
-                        ChartsView()
-                    }
+            Group {
+                if selection == .reports {
+                    ReportsView()
+                } else {
+                    ChartsView()
                 }
             }
             .background { AppBackground() }
             .navigationTitle("Análisis")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    sectionButton(.reports, icon: "doc.text.fill", label: "Reportes")
+                    sectionButton(.charts, icon: "chart.pie.fill", label: "Gráficas")
+                }
+            }
         }
+    }
+
+    private func sectionButton(_ section: Section, icon: String, label: String) -> some View {
+        Button {
+            withAnimation(.snappy(duration: 0.2)) { selection = section }
+        } label: {
+            Image(systemName: icon)
+                .foregroundStyle(selection == section ? Color.appAccent : Color.appTextSecondary)
+        }
+        .accessibilityLabel(label)
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 

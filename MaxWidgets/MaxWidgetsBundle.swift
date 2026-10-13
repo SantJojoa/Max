@@ -12,5 +12,8 @@ import SwiftUI
 struct MaxWidgetsBundle: WidgetBundle {
     var body: some Widget {
         MaxWidgets()
+        BudgetRemainingWidget()
+        TodaySpendingWidget()
+        MaxWidgetsControl()
     }
 }

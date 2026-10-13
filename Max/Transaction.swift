@@ -13,6 +13,7 @@ final class Transaction {
     var category: String
     var date: Date
     var note: String
+    @Attribute(.externalStorage) var receiptData: Data?
 
     var remoteID: UUID?
     var updatedAt: Date
@@ -25,6 +26,7 @@ final class Transaction {
         self.category = category
         self.date = date
         self.note = note
+        self.receiptData = nil
         self.remoteID = nil
         self.updatedAt = .now
         self.isDeleted = false

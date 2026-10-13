@@ -172,12 +172,12 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
-            .foregroundStyle(.white)
+            .font(.system(.headline, design: .rounded, weight: .bold))
+            .foregroundStyle(isDisabled ? Color.appTextSecondary : Color.black)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(isDisabled ? Color.gray.opacity(0.4) : Color.appAccent)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .frame(height: 54)
+            .background(isDisabled ? Color.appElevated : Color.appAccent)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
@@ -232,7 +232,58 @@ enum CategoryStyle {
     }
 }
 
-/// Cuadro redondeado translúcido con el ícono de una categoría.
+extension CategoryStyle {
+    static let emojiStorageKey = "categoryEmojis"
+
+    static func emojis(from json: String) -> [String: String] {
+        guard let data = json.data(using: .utf8),
+              let dict = try? JSONDecoder().decode([String: String].self, from: data) else { return [:] }
+        return dict
+    }
+
+    static func emoji(for name: String, in json: String) -> String? {
+        let value = emojis(from: json)[name.lowercased()]
+        return (value?.isEmpty ?? true) ? nil : value
+    }
+
+    static func emoji(for name: String) -> String? {
+        emoji(for: name, in: UserDefaults.standard.string(forKey: emojiStorageKey) ?? "{}")
+    }
+
+    /// Guarda (o quita, si `emoji` es nil) el emoji de una categoría. Se guarda en el dispositivo.
+    static func setEmoji(_ emoji: String?, for name: String, replacing oldName: String? = nil) {
+        var dict = emojis(from: UserDefaults.standard.string(forKey: emojiStorageKey) ?? "{}")
+        if let oldName { dict.removeValue(forKey: oldName.lowercased()) }
+        if let emoji, !emoji.isEmpty {
+            dict[name.lowercased()] = emoji
+        } else {
+            dict.removeValue(forKey: name.lowercased())
+        }
+        if let data = try? JSONEncoder().encode(dict), let json = String(data: data, encoding: .utf8) {
+            UserDefaults.standard.set(json, forKey: emojiStorageKey)
+        }
+    }
+}
+
+/// Ícono de categoría sin fondo: emoji personalizado si existe, si no el SF Symbol con su color.
+struct CategoryGlyph: View {
+    let name: String
+    var size: CGFloat = 24
+    @AppStorage(CategoryStyle.emojiStorageKey) private var emojiJSON = "{}"
+
+    var body: some View {
+        if let emoji = CategoryStyle.emoji(for: name, in: emojiJSON) {
+            Text(emoji)
+                .font(.system(size: size))
+        } else {
+            Image(systemName: CategoryStyle.symbol(for: name))
+                .font(.system(size: size, weight: .semibold))
+                .foregroundStyle(CategoryStyle.color(for: name))
+        }
+    }
+}
+
+/// Cuadro redondeado translúcido con el ícono (o emoji) de una categoría.
 struct CategoryIcon: View {
     let name: String
     var size: CGFloat = 40
@@ -243,9 +294,7 @@ struct CategoryIcon: View {
             .fill(tint.opacity(0.18))
             .frame(width: size, height: size)
             .overlay {
-                Image(systemName: CategoryStyle.symbol(for: name))
-                    .font(.system(size: size * 0.45, weight: .semibold))
-                    .foregroundStyle(tint)
+                CategoryGlyph(name: name, size: size * 0.45)
             }
     }
 }

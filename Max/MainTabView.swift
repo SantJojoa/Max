@@ -89,10 +89,10 @@ struct MainTabView: View {
         .tint(Color.appAccent)
         .fontDesign(.rounded)
         .task {
-            seedDefaultCategoriesIfNeeded()
             RecurringExpenseManager.generateIfNeeded(context: modelContext)
             print("📱 App abierta, disparando sync inicial")
             await SyncManager.shared.syncAll(context: modelContext)
+            CategoryMaintenance.run(context: modelContext, syncSucceeded: SyncManager.shared.lastError == nil && !SyncManager.shared.isSyncing)
             connectivityMonitor.onReconnect = {
                 print("📶 Reconectado, disparando sync")
                 
@@ -101,27 +101,6 @@ struct MainTabView: View {
                 }
             }
         }
-    }
-
-    private func seedDefaultCategoriesIfNeeded() {
-        let existingCount = (try? modelContext.fetchCount(FetchDescriptor<Category>())) ?? 0
-        guard existingCount == 0 else { return }
-
-        let expenseDefaults = ["Comida", "Transporte", "Vivienda", "Entretenimiento", "Salud", "Otros"]
-        let incomeDefaults = ["Salario", "Freelance", "Regalo", "Otros"]
-        let cardDefaults = ["Comida", "Transporte", "Compras", "Entretenimiento", "Salud", "Suscripciones", "Otros"]
-
-        for name in expenseDefaults {
-            modelContext.insert(Category(name: name, scope: .expense))
-        }
-        for name in incomeDefaults {
-            modelContext.insert(Category(name: name, scope: .income))
-        }
-        for name in cardDefaults {
-            modelContext.insert(Category(name: name, scope: .card))
-        }
-
-        try? modelContext.save()
     }
 }
 

@@ -26,6 +26,7 @@ struct MaxApp: App {
                     MainTabView()
                 }
             }
+            .preferredColorScheme(.dark)
             .onAppear {
                 NotificationManager.shared.requestAuthorization()
             }

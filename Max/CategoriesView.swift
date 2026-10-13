@@ -62,8 +62,7 @@ struct CategoriesView: View {
                 Button {
                     showingAdd = true
                 } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundStyle(Color.appAccent)
+                    Image(systemName: "plus")
                 }
             }
         }
