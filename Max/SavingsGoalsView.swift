@@ -6,7 +6,7 @@ import SwiftData
 /// directamente en la `Section` del `List` que lo contiene.
 struct SavingsGoalsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<SavingsGoal> { !$0.isDeleted }, sort: \SavingsGoal.name) private var goals: [SavingsGoal]
+    @Query(filter: #Predicate<SavingsGoal> { !$0.isRemoved }, sort: \SavingsGoal.name) private var goals: [SavingsGoal]
     @State private var showingAdd = false
     @State private var editingGoal: SavingsGoal?
     @State private var fundingGoal: SavingsGoal?
@@ -149,7 +149,7 @@ struct SavingsGoalsView: View {
     private func deleteGoals(at offsets: IndexSet) {
         for index in offsets {
             let goal = goals[index]
-            goal.isDeleted = true
+            goal.isRemoved = true
             goal.updatedAt = .now
             goal.needsSync = true
         }

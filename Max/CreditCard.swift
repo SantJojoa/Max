@@ -15,7 +15,7 @@ final class CreditCard {
 
     var remoteID: UUID?
     var updatedAt: Date
-    var isDeleted: Bool
+    @Attribute(originalName: "isDeleted") var isRemoved: Bool
     var needsSync: Bool
 
     init(name: String, creditLimit: Double, closingDay: Int, monthlyInterestRate: Double, managementFee: Double) {
@@ -26,7 +26,7 @@ final class CreditCard {
         self.managementFee = managementFee
         self.remoteID = nil
         self.updatedAt = .now
-        self.isDeleted = false
+        self.isRemoved = false
         self.needsSync = true
     }
 }

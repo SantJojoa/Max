@@ -15,5 +15,6 @@ struct MaxWidgetsBundle: WidgetBundle {
         BudgetRemainingWidget()
         TodaySpendingWidget()
         MaxWidgetsControl()
+        SpendingLiveActivity()
     }
 }

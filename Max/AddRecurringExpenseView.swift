@@ -14,7 +14,7 @@ struct AddRecurringExpenseView: View {
     @State private var dayOfMonth: Int = 1
     @State private var isActive: Bool = true
 
-    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
+    @Query(filter: #Predicate<Category> { !$0.isRemoved }, sort: \Category.name) private var allCategories: [Category]
 
     private var currentCategories: [String] {
         let scope: CategoryScope = type == .expense ? .expense : .income

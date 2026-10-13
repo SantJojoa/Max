@@ -11,7 +11,7 @@ enum RecurringExpenseManager {
         let daysInMonth = calendar.range(of: .day, in: .month, for: today)?.count ?? 31
 
         guard let items = try? context.fetch(
-            FetchDescriptor<RecurringExpense>(predicate: #Predicate { !$0.isDeleted && $0.isActive })
+            FetchDescriptor<RecurringExpense>(predicate: #Predicate { !$0.isRemoved && $0.isActive })
         ) else { return }
 
         var didGenerate = false

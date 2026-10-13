@@ -17,7 +17,7 @@ final class CardTransaction {
 
     var remoteID: UUID?
     var updatedAt: Date
-    var isDeleted: Bool
+    @Attribute(originalName: "isDeleted") var isRemoved: Bool
     var needsSync: Bool
 
     init(amount: Double, type: CardTransactionType, category: String = "", date: Date = .now, note: String = "", card: CreditCard? = nil) {
@@ -29,7 +29,7 @@ final class CardTransaction {
         self.card = card
         self.remoteID = nil
         self.updatedAt = .now
-        self.isDeleted = false
+        self.isRemoved = false
         self.needsSync = true
     }
 }

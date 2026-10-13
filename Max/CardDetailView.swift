@@ -10,11 +10,11 @@ struct CardDetailView: View {
     @State private var editingTransaction: CardTransaction?
 
     private var sortedTransactions: [CardTransaction] {
-        card.transactions.filter { !$0.isDeleted }.sorted { $0.date > $1.date }
+        card.transactions.filter { !$0.isRemoved }.sorted { $0.date > $1.date }
     }
 
     private var usedCupo: Double {
-        let activeTransactions = card.transactions.filter { !$0.isDeleted }
+        let activeTransactions = card.transactions.filter { !$0.isRemoved }
         let purchases = activeTransactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
         let payments = activeTransactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
         return purchases - payments
@@ -234,7 +234,7 @@ struct CardDetailView: View {
     private func deleteTransactions(at offsets: IndexSet) {
         for index in offsets {
             let transaction = sortedTransactions[index]
-            transaction.isDeleted = true
+            transaction.isRemoved = true
             transaction.updatedAt = .now
             transaction.needsSync = true
         }

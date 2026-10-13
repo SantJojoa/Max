@@ -16,7 +16,13 @@ struct AddTransactionView: View {
     @State private var note: String = ""
 
     @Query private var budgets: [Budget]
-    @Query(filter: #Predicate<CreditCard> { !$0.isDeleted }, sort: \CreditCard.name) private var cards: [CreditCard]
+    @Query(filter: #Predicate<CreditCard> { !$0.isRemoved }, sort: \CreditCard.name) private var cards: [CreditCard]
+
+    @Query(filter: #Predicate<CardTransaction> { !$0.isRemoved }) private var cardTransactions: [CardTransaction]
+    @Query(filter: #Predicate<Account> { !$0.isRemoved }, sort: \Account.name) private var accounts: [Account]
+    @State private var selectedAccount: Account?
+    @AppStorage("lastAccountName") private var lastAccountName = ""
+    @State private var categoryChosenManually = false
 
     private enum PaymentMethod { case cash, card }
     @State private var method: PaymentMethod = .cash
@@ -28,7 +34,7 @@ struct AddTransactionView: View {
     @State private var isReadingReceipt = false
     @State private var receiptMessage: String?
     @Query private var allTransactions: [Transaction]
-    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
+    @Query(filter: #Predicate<Category> { !$0.isRemoved }, sort: \Category.name) private var allCategories: [Category]
 
     private var currentCategories: [String] {
         let scope: CategoryScope = type == .expense ? .expense : .income
@@ -44,6 +50,45 @@ struct AddTransactionView: View {
     private var isEditing: Bool { transactionToEdit != nil }
 
     private var currency: AppCurrency { CurrencySettings.shared.currency }
+
+    private var samples: [CategorySuggester.Sample] {
+        let cash = allTransactions.filter { !$0.isRemoved }.map {
+            CategorySuggester.Sample(note: $0.note, category: $0.category, isIncome: $0.type == .income, amount: $0.amount, date: $0.date, card: nil)
+        }
+        let card = cardTransactions.filter { $0.type == .purchase }.map {
+            CategorySuggester.Sample(note: $0.note, category: $0.category, isIncome: false, amount: $0.amount, date: $0.date, card: $0.card)
+        }
+        return cash + card
+    }
+
+    private var frequentItems: [CategorySuggester.Frequent] {
+        guard !isEditing, digits.isEmpty, note.isEmpty else { return [] }
+        return CategorySuggester.frequent(samples: samples)
+    }
+
+    private func applyAutoCategory() {
+        guard !isEditing, !categoryChosenManually else { return }
+        if let suggestion = CategorySuggester.suggest(note: note, isIncome: type == .income, samples: samples, available: currentCategories) {
+            if category != suggestion {
+                withAnimation(.snappy(duration: 0.2)) { category = suggestion }
+            }
+        }
+    }
+
+    private func apply(_ item: CategorySuggester.Frequent) {
+        categoryChosenManually = true
+        type = item.isIncome ? .income : .expense
+        note = item.note
+        digits = AmountField.Coordinator.digits(from: item.amount, currency: currency)
+        if currentCategories.contains(item.category) { category = item.category }
+        if let card = item.card, cards.contains(where: { $0 === card }) {
+            method = .card
+            selectedCard = card
+        } else {
+            method = .cash
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
 
     private var amount: Double {
         AmountField.Coordinator.numericValue(fromDigits: digits, currency: currency)
@@ -63,6 +108,12 @@ struct AddTransactionView: View {
 
                     if showsMethodSelector && method == .card {
                         cardChips
+                    } else if !accounts.isEmpty {
+                        accountChips
+                    }
+
+                    if !frequentItems.isEmpty {
+                        suggestionsRow
                     }
 
                     amountDisplay
@@ -99,7 +150,10 @@ struct AddTransactionView: View {
                 }
             }
             .onAppear {
-                if transactionToEdit == nil { type = initialType }
+                if transactionToEdit == nil {
+                    type = initialType
+                    selectedAccount = accounts.first { $0.name == lastAccountName } ?? accounts.first
+                }
                 if let transaction = transactionToEdit {
                     digits = AmountField.Coordinator.digits(from: transaction.amount, currency: currency)
                     type = transaction.type
@@ -107,6 +161,7 @@ struct AddTransactionView: View {
                     date = transaction.date
                     note = transaction.note
                     receiptData = transaction.receiptData
+                    selectedAccount = transaction.account
                 }
             }
             .sheet(isPresented: $showingScanner) {
@@ -118,6 +173,7 @@ struct AddTransactionView: View {
                 }
                 .ignoresSafeArea()
             }
+            .onChange(of: note) { applyAutoCategory() }
             .onChange(of: photoItem) { _, item in
                 guard let item else { return }
                 Task {
@@ -174,6 +230,7 @@ struct AddTransactionView: View {
                         let selected = category == name
                         let tint = CategoryStyle.color(for: name)
                         Button {
+                            categoryChosenManually = true
                             withAnimation(.snappy(duration: 0.2)) { category = name }
                         } label: {
                             VStack(spacing: 4) {
@@ -238,6 +295,71 @@ struct AddTransactionView: View {
         .sensoryFeedback(.selection, trigger: type)
     }
 
+    // MARK: - Cuenta
+
+    private var accountChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.s) {
+                ForEach(accounts) { account in
+                    let isSelected = selectedAccount === account
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) {
+                            selectedAccount = isSelected ? nil : account
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: account.kind.icon)
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(account.name)
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .foregroundStyle(isSelected ? Color.black : Color.appTextPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(isSelected ? Color.appAccent : Color.appCardBackground, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, Spacing.l)
+        }
+    }
+
+    // MARK: - Frecuentes
+
+    private var suggestionsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.s) {
+                Image(systemName: "sparkles")
+                    .font(.footnote)
+                    .foregroundStyle(Color.appOrange)
+                ForEach(frequentItems) { item in
+                    Button {
+                        apply(item)
+                    } label: {
+                        HStack(spacing: 6) {
+                            CategoryGlyph(name: item.category, size: 14)
+                            Text(item.note)
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.appTextPrimary)
+                                .lineLimit(1)
+                            Text(CurrencyFormat.string(for: item.amount, decimals: 0))
+                                .font(.caption2)
+                                .monospacedDigit()
+                                .foregroundStyle(Color.appTextSecondary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.appCardBackground, in: Capsule())
+                        .overlay { Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5) }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, Spacing.l)
+        }
+    }
+
     // MARK: - Método de pago (solo íconos)
 
     private var showsMethodSelector: Bool {
@@ -288,28 +410,23 @@ struct AddTransactionView: View {
 
     // MARK: - Recibo
 
-    private var receiptRow: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "doc.text.viewfinder")
-                .foregroundStyle(Color.appOrange)
-                .frame(width: 24)
-            Text("Recibo")
-
-            Spacer()
-
+    private var receiptControls: some View {
+        HStack(spacing: 2) {
             if isReadingReceipt {
                 ProgressView()
+                    .frame(width: 40, height: 32)
             } else if let receiptData, let image = UIImage(data: receiptData) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 36, height: 36)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .frame(width: 32, height: 32)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Button {
                     self.receiptData = nil
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(Color.appTextSecondary)
+                        .frame(width: 30, height: 32)
                 }
                 .buttonStyle(.plain)
             } else {
@@ -318,7 +435,7 @@ struct AddTransactionView: View {
                 } label: {
                     Image(systemName: "camera.viewfinder")
                         .font(.system(size: 20))
-                        .frame(width: 40, height: 32)
+                        .frame(width: 38, height: 32)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.appAccent)
@@ -326,15 +443,13 @@ struct AddTransactionView: View {
 
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     Image(systemName: "photo")
-                        .font(.system(size: 20))
-                        .frame(width: 40, height: 32)
+                        .font(.system(size: 19))
+                        .frame(width: 38, height: 32)
                 }
                 .foregroundStyle(Color.appAccent)
                 .accessibilityLabel("Elegir foto del recibo")
             }
         }
-        .padding(.horizontal, Spacing.l)
-        .padding(.vertical, 4)
     }
 
     @MainActor
@@ -362,10 +477,10 @@ struct AddTransactionView: View {
                     .foregroundStyle(Color.appTextSecondary)
                     .frame(width: 24)
                 TextField("Concepto o nota (opcional)", text: $note)
-                    .multilineTextAlignment(.trailing)
+                receiptControls
             }
             .padding(.horizontal, Spacing.l)
-            .padding(.vertical, 9)
+            .padding(.vertical, 6)
 
             Divider().padding(.leading, 52)
 
@@ -381,9 +496,6 @@ struct AddTransactionView: View {
             .padding(.horizontal, Spacing.l)
             .padding(.vertical, 3)
 
-            Divider().padding(.leading, 52)
-
-            receiptRow
         }
         .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
@@ -394,9 +506,9 @@ struct AddTransactionView: View {
 
     private var keypad: some View {
         let keys: [[String]] = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["00", "0", "⌫"]]
-        return VStack(spacing: 10) {
+        return VStack(spacing: 8) {
             ForEach(keys, id: \.self) { row in
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     ForEach(row, id: \.self) { key in
                         Button {
                             press(key)
@@ -412,7 +524,7 @@ struct AddTransactionView: View {
                             }
                             .foregroundStyle(Color.appTextPrimary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 54)
+                            .frame(height: 50)
                             .background(Color.appCardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
                         }
@@ -447,15 +559,22 @@ struct AddTransactionView: View {
             transaction.amount = amount
             transaction.type = type
             transaction.category = category
+            transaction.account = selectedAccount
             transaction.date = date
             transaction.note = note
-            transaction.receiptData = receiptData
+            if transaction.receiptData != receiptData {
+                transaction.receiptData = receiptData
+                transaction.receiptNeedsUpload = true
+            }
             transaction.updatedAt = .now
             transaction.needsSync = true
         } else {
             let transaction = Transaction(amount: amount, type: type, category: category, date: date, note: note)
             transaction.receiptData = receiptData
+            transaction.receiptNeedsUpload = receiptData != nil
+            transaction.account = selectedAccount
             modelContext.insert(transaction)
+            if let selectedAccount { lastAccountName = selectedAccount.name }
         }
 
         if type == .expense {

@@ -89,6 +89,7 @@ struct MainTabView: View {
         .tint(Color.appAccent)
         .fontDesign(.rounded)
         .task {
+            DeletionRepair.runIfNeeded(context: modelContext)
             RecurringExpenseManager.generateIfNeeded(context: modelContext)
             print("📱 App abierta, disparando sync inicial")
             await SyncManager.shared.syncAll(context: modelContext)

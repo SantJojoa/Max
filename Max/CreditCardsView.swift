@@ -3,12 +3,12 @@ import SwiftData
 
 struct CreditCardsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<CreditCard> { !$0.isDeleted }) private var cards: [CreditCard]
+    @Query(filter: #Predicate<CreditCard> { !$0.isRemoved }) private var cards: [CreditCard]
     @State private var showingAddCard = false
     @State private var editingCard: CreditCard?
 
     private func usedCupo(for card: CreditCard) -> Double {
-        let activeTransactions = card.transactions.filter { !$0.isDeleted }
+        let activeTransactions = card.transactions.filter { !$0.isRemoved }
         let purchases = activeTransactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
         let payments = activeTransactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
         return purchases - payments
@@ -153,11 +153,11 @@ struct CreditCardsView: View {
     }
 
     private func delete(_ card: CreditCard) {
-        card.isDeleted = true
+        card.isRemoved = true
         card.updatedAt = .now
         card.needsSync = true
         for transaction in card.transactions {
-            transaction.isDeleted = true
+            transaction.isRemoved = true
             transaction.updatedAt = .now
             transaction.needsSync = true
         }

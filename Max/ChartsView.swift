@@ -3,8 +3,8 @@ import SwiftData
 import Charts
 
 struct ChartsView: View {
-    @Query(filter: #Predicate<Transaction> { !$0.isDeleted }) private var transactions: [Transaction]
-    @Query(filter: #Predicate<CreditCard> { !$0.isDeleted }) private var cards: [CreditCard]
+    @Query(filter: #Predicate<Transaction> { !$0.isRemoved }) private var transactions: [Transaction]
+    @Query(filter: #Predicate<CreditCard> { !$0.isRemoved }) private var cards: [CreditCard]
     
     private let calendar = Calendar.current
 
@@ -39,7 +39,7 @@ struct ChartsView: View {
         let purchases = cards
             .flatMap { $0.transactions }
             .filter {
-                !$0.isDeleted &&
+                !$0.isRemoved &&
                 $0.type == .purchase &&
                 calendar.component(.month, from: $0.date) == currentMonth &&
                 calendar.component(.year, from: $0.date) == currentYear
@@ -81,7 +81,7 @@ struct ChartsView: View {
     }
 
     private func usedCupo(for card: CreditCard) -> Double {
-        let activeTransactions = card.transactions.filter { !$0.isDeleted }
+        let activeTransactions = card.transactions.filter { !$0.isRemoved }
         let purchases = activeTransactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
         let payments = activeTransactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
         return purchases - payments
@@ -131,7 +131,7 @@ struct ChartsView: View {
             $0.type == .expense && calendar.component(.year, from: $0.date) == currentYear
         }
         let cardPurchases = cards.flatMap { $0.transactions }.filter {
-            !$0.isDeleted && $0.type == .purchase && calendar.component(.year, from: $0.date) == currentYear
+            !$0.isRemoved && $0.type == .purchase && calendar.component(.year, from: $0.date) == currentYear
         }
 
         var totals: [String: Double] = [:]

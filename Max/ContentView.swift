@@ -3,9 +3,12 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<Transaction> { !$0.isDeleted }, sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
-    @Query(filter: #Predicate<Budget> { !$0.isDeleted }) private var budgets: [Budget]
-    @Query(filter: #Predicate<CardTransaction> { !$0.isDeleted }) private var cardTransactions: [CardTransaction]
+    @Query(filter: #Predicate<Transaction> { !$0.isRemoved }, sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    @Query(filter: #Predicate<Budget> { !$0.isRemoved }) private var budgets: [Budget]
+    @Query(filter: #Predicate<Account> { !$0.isRemoved }, sort: \Account.name) private var accounts: [Account]
+    @State private var accountFilter: Account?
+    @State private var showingAddAccount = false
+    @Query(filter: #Predicate<CardTransaction> { !$0.isRemoved }) private var cardTransactions: [CardTransaction]
     var onNavigate: (MainTabView.AppTab) -> Void = { _ in }
     @State private var showingAddView = false
     @State private var addType: TransactionType = .expense
@@ -36,7 +39,7 @@ struct ContentView: View {
     }
 
     private var balance: Double {
-        totalIncome - totalExpense
+        totalIncome - totalExpense + accounts.reduce(0) { $0 + $1.initialBalance }
     }
 
     private var currentMonthTransactions: [Transaction] {
@@ -71,6 +74,10 @@ struct ContentView: View {
             result = result.filter { $0.date >= customStart && $0.date <= customEnd }
         }
 
+        if let accountFilter {
+            result = result.filter { $0.account === accountFilter }
+        }
+
         if let typeFilter {
             result = result.filter { $0.type == typeFilter }
         }
@@ -94,7 +101,7 @@ struct ContentView: View {
     }
 
     private var isFiltering: Bool {
-        dateFilter != .all || extraFilterCount > 0
+        dateFilter != .all || extraFilterCount > 0 || accountFilter != nil
     }
 
     private var availableCategories: [String] {
@@ -208,6 +215,13 @@ struct ContentView: View {
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))
+
+                Section {
+                    accountsStrip
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: Spacing.s, trailing: 0))
 
                 if spendingInsight != nil {
                     Section {
@@ -407,6 +421,99 @@ struct ContentView: View {
             .reduce(0) { $0 + $1.amount }
 
         WidgetDataStore.updateBudget(total: total, spent: spent, spentToday: cashToday + cardToday, dailyAllowance: allowance)
+        SpendingActivityManager.update(spentToday: cashToday + cardToday, dailyAllowance: allowance)
+    }
+
+    // MARK: - Cuentas
+
+    @ViewBuilder
+    private var accountsStrip: some View {
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            HStack {
+                Text("Cuentas")
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .foregroundStyle(Color.appTextPrimary)
+                Spacer()
+                NavigationLink {
+                    AccountsView()
+                } label: {
+                    Text(accounts.isEmpty ? "Crear" : "Administrar")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.appAccent)
+                }
+            }
+            .padding(.horizontal, Spacing.l)
+
+            if accounts.isEmpty {
+                Button {
+                    showingAddAccount = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "building.columns.fill")
+                            .foregroundStyle(Color.appBlue)
+                        Text("Separa tu saldo por banco, ahorros y efectivo")
+                            .font(.footnote)
+                            .foregroundStyle(Color.appTextSecondary)
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                        Image(systemName: "plus")
+                            .foregroundStyle(Color.appAccent)
+                    }
+                    .padding(Spacing.m)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, Spacing.l)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.s) {
+                        ForEach(accounts) { account in
+                            accountCard(account)
+                        }
+                    }
+                    .padding(.horizontal, Spacing.l)
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddAccount) { AddAccountView() }
+    }
+
+    private func accountCard(_ account: Account) -> some View {
+        let selected = accountFilter === account
+        let tint: Color = account.kind == .cash ? .appAccent : (account.kind == .bank ? .appBlue : .appPurple)
+        return Button {
+            withAnimation(.snappy(duration: 0.2)) {
+                accountFilter = selected ? nil : account
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: account.kind.icon)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tint)
+                    Text(account.name)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.appTextPrimary)
+                        .lineLimit(1)
+                }
+                Text(hideBalance ? "••••" : CurrencyFormat.string(for: account.balance, decimals: 0))
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(account.balance >= 0 ? Color.appTextPrimary : Color.appExpense)
+                    .lineLimit(1)
+            }
+            .padding(Spacing.m)
+            .frame(width: 150, alignment: .leading)
+            .glassEffect(.regular.tint(selected ? tint.opacity(0.25) : .clear).interactive(), in: RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
+            .overlay {
+                if selected {
+                    RoundedRectangle(cornerRadius: Radius.large, style: .continuous)
+                        .strokeBorder(tint.opacity(0.8), lineWidth: 1.5)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Acciones rápidas
@@ -483,6 +590,7 @@ struct ContentView: View {
                     dateFilter = .all
                     typeFilter = nil
                     categoryFilter = nil
+                    accountFilter = nil
                 } label: {
                     Label("Quitar filtros", systemImage: "xmark.circle")
                 }
@@ -537,7 +645,7 @@ struct ContentView: View {
     }
 
     private func delete(_ transaction: Transaction) {
-        transaction.isDeleted = true
+        transaction.isRemoved = true
         transaction.updatedAt = .now
         transaction.needsSync = true
     }

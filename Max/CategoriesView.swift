@@ -3,7 +3,7 @@ import SwiftData
 
 struct CategoriesView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var categories: [Category]
+    @Query(filter: #Predicate<Category> { !$0.isRemoved }, sort: \Category.name) private var categories: [Category]
     @State private var showingAdd = false
     @State private var editingCategory: Category?
     @State private var selectedScope: CategoryScope = .expense
@@ -77,7 +77,7 @@ struct CategoriesView: View {
     private func deleteCategories(at offsets: IndexSet) {
         for index in offsets {
             let category = filteredCategories[index]
-            category.isDeleted = true
+            category.isRemoved = true
             category.updatedAt = .now
             category.needsSync = true
         }

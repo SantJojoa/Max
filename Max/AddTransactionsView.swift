@@ -21,7 +21,7 @@ struct AddCardTransactionView: View {
     @State private var date: Date = .now
     @State private var note: String = ""
 
-    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
+    @Query(filter: #Predicate<Category> { !$0.isRemoved }, sort: \Category.name) private var allCategories: [Category]
     private var purchaseCategories: [String] {
         allCategories.filter { $0.scope == .card }.map { $0.name }
     }

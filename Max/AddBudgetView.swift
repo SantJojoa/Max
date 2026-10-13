@@ -10,7 +10,7 @@ struct AddBudgetView: View {
     @State private var category: String = ""
     @State private var limit: Double = 0
 
-    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
+    @Query(filter: #Predicate<Category> { !$0.isRemoved }, sort: \Category.name) private var allCategories: [Category]
     private var categories: [String] {
         allCategories.filter { $0.scope == .expense }.map { $0.name }
     }

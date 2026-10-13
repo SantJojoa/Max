@@ -14,10 +14,13 @@ final class Transaction {
     var date: Date
     var note: String
     @Attribute(.externalStorage) var receiptData: Data?
+    var receiptPath: String?
+    var receiptNeedsUpload: Bool = false
+    var account: Account?
 
     var remoteID: UUID?
     var updatedAt: Date
-    var isDeleted: Bool
+    @Attribute(originalName: "isDeleted") var isRemoved: Bool
     var needsSync: Bool
 
     init(amount: Double, type: TransactionType, category: String, date: Date = .now, note: String = "") {
@@ -29,7 +32,7 @@ final class Transaction {
         self.receiptData = nil
         self.remoteID = nil
         self.updatedAt = .now
-        self.isDeleted = false
+        self.isRemoved = false
         self.needsSync = true
     }
 }

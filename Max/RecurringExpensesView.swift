@@ -6,7 +6,7 @@ import SwiftData
 /// directamente en la `Section` del `List` que lo contiene.
 struct RecurringExpensesView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<RecurringExpense> { !$0.isDeleted }, sort: \RecurringExpense.dayOfMonth) private var items: [RecurringExpense]
+    @Query(filter: #Predicate<RecurringExpense> { !$0.isRemoved }, sort: \RecurringExpense.dayOfMonth) private var items: [RecurringExpense]
     @State private var showingAdd = false
     @State private var editingItem: RecurringExpense?
 
@@ -123,7 +123,7 @@ struct RecurringExpensesView: View {
     private func deleteItems(at offsets: IndexSet) {
         for index in offsets {
             let item = items[index]
-            item.isDeleted = true
+            item.isRemoved = true
             item.updatedAt = .now
             item.needsSync = true
         }

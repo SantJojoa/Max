@@ -6,8 +6,8 @@ import SwiftData
 /// directamente en la `Section` del `List` que lo contiene.
 struct BudgetsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<Budget> { !$0.isDeleted }) private var budgets: [Budget]
-    @Query(filter: #Predicate<Transaction> { !$0.isDeleted }) private var transactions: [Transaction]
+    @Query(filter: #Predicate<Budget> { !$0.isRemoved }) private var budgets: [Budget]
+    @Query(filter: #Predicate<Transaction> { !$0.isRemoved }) private var transactions: [Transaction]
     @State private var showingAddBudget = false
     @State private var editingBudget: Budget?
 
@@ -171,7 +171,7 @@ struct BudgetsView: View {
     private func deleteBudgets(at offsets: IndexSet) {
         for index in offsets {
             let budget = currentBudgets[index]
-            budget.isDeleted = true
+            budget.isRemoved = true
             budget.updatedAt = .now
             budget.needsSync = true
         }

@@ -87,7 +87,7 @@ struct AddCategoryView: View {
                 if let category = categoryToEdit {
                     name = category.name
                     scope = category.scope
-                    emoji = CategoryStyle.emoji(for: category.name) ?? ""
+                    emoji = category.emoji ?? CategoryStyle.emoji(for: category.name) ?? ""
                 } else {
                     scope = defaultScope
                 }
@@ -101,10 +101,12 @@ struct AddCategoryView: View {
         if let category = categoryToEdit {
             category.name = trimmed
             category.scope = scope
+            category.emoji = emoji.isEmpty ? nil : emoji
             category.updatedAt = .now
             category.needsSync = true
         } else {
             let category = Category(name: trimmed, scope: scope)
+            category.emoji = emoji.isEmpty ? nil : emoji
             modelContext.insert(category)
         }
         dismiss()

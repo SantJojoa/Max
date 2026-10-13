@@ -13,7 +13,7 @@ final class RecurringExpense {
     var lastGeneratedYear: Int?
     var remoteID: UUID?
     var updatedAt: Date
-    var isDeleted: Bool
+    @Attribute(originalName: "isDeleted") var isRemoved: Bool
     var needsSync: Bool
 
     init(name: String, amount: Double, type: TransactionType, category: String, dayOfMonth: Int, isActive: Bool = true) {
@@ -27,7 +27,7 @@ final class RecurringExpense {
         self.lastGeneratedYear = nil
         self.remoteID = nil
         self.updatedAt = .now
-        self.isDeleted = false
+        self.isRemoved = false
         self.needsSync = true
     }
 }

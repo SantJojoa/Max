@@ -64,6 +64,7 @@
 				AppCurrency.swift,
 				CurrencyFormat.swift,
 				CurrencySettings.swift,
+				SpendingActivityAttributes.swift,
 			);
 			target = 3553445F3044AFE500EC8E3B /* MaxWidgetsExtension */;
 		};
@@ -453,6 +454,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Usamos la cámara para escanear tus recibos y leer el monto automáticamente.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Usamos Face ID para proteger el acceso a tus datos financieros.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -489,6 +491,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Usamos la cámara para escanear tus recibos y leer el monto automáticamente.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Usamos Face ID para proteger el acceso a tus datos financieros.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

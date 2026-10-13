@@ -13,6 +13,18 @@ struct SettingsView: View {
     @State private var isSigningOut = false
     @State private var syncManager = SyncManager.shared
 
+    @AppStorage(SpendingActivityManager.enabledKey) private var liveActivityEnabled = true
+
+    private var liveActivityBinding: Binding<Bool> {
+        Binding(
+            get: { liveActivityEnabled },
+            set: { newValue in
+                liveActivityEnabled = newValue
+                if !newValue { SpendingActivityManager.end() }
+            }
+        )
+    }
+
     var body: some View {
         List {
             Section {
@@ -53,6 +65,11 @@ struct SettingsView: View {
 
             Section {
                 NavigationLink {
+                    AccountsView()
+                } label: {
+                    settingsRow(title: "Cuentas", icon: "building.columns.fill", tint: .appBlue)
+                }
+                NavigationLink {
                     CategoriesView()
                 } label: {
                     settingsRow(title: "Gestionar categorías", icon: "tag.fill", tint: .appOrange)
@@ -62,6 +79,18 @@ struct SettingsView: View {
                 } label: {
                     settingsRow(title: "Moneda", icon: "banknote.fill", tint: .appAccent)
                 }
+            }
+            .listRowBackground(Color.appCardBackground)
+
+            Section {
+                Toggle(isOn: liveActivityBinding) {
+                    settingsRow(title: "Gasto del día en pantalla de bloqueo", icon: "lock.iphone", tint: .appOrange)
+                }
+                .tint(Color.appAccent)
+            } header: {
+                Text("Pantalla de bloqueo")
+            } footer: {
+                Text("Muestra cuánto has gastado hoy frente a tu límite diario en una Live Activity.")
             }
             .listRowBackground(Color.appCardBackground)
 

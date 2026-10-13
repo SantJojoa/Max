@@ -9,7 +9,7 @@ final class SavingsGoal {
     var targetDate: Date?
     var remoteID: UUID?
     var updatedAt: Date
-    var isDeleted: Bool
+    @Attribute(originalName: "isDeleted") var isRemoved: Bool
     var needsSync: Bool
 
     init(name: String, targetAmount: Double, savedAmount: Double = 0) {
@@ -19,7 +19,7 @@ final class SavingsGoal {
         self.targetDate = nil
         self.remoteID = nil
         self.updatedAt = .now
-        self.isDeleted = false
+        self.isRemoved = false
         self.needsSync = true
     }
 }

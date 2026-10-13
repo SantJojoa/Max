@@ -44,7 +44,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             let old = pending.map(\.identifier).filter { $0.hasPrefix("recurring-") }
             center.removePendingNotificationRequests(withIdentifiers: old)
 
-            for (index, item) in items.enumerated() where item.isActive && !item.isDeleted && item.type == .expense {
+            for (index, item) in items.enumerated() where item.isActive && !item.isRemoved && item.type == .expense {
                 let day = min(max(item.dayOfMonth, 1), 31)
                 let reminderDay = day == 1 ? 1 : day - 1
 
@@ -81,7 +81,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
                 center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
             }
 
-            for (index, card) in cards.enumerated() where !card.isDeleted {
+            for (index, card) in cards.enumerated() where !card.isRemoved {
                 add(id: "card-cut-\(index)-\(card.name)",
                     title: "Corte de \(card.name)",
                     body: card.closingDay == 1 ? "Hoy es el corte de tu tarjeta." : "Mañana es el corte de tu tarjeta.",

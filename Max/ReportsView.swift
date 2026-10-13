@@ -2,8 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct ReportsView: View {
-    @Query(filter: #Predicate<Transaction> { !$0.isDeleted }) private var transactions: [Transaction]
-    @Query(filter: #Predicate<CreditCard> { !$0.isDeleted }) private var cards: [CreditCard]
+    @Query(filter: #Predicate<Transaction> { !$0.isRemoved }) private var transactions: [Transaction]
+    @Query(filter: #Predicate<CreditCard> { !$0.isRemoved }) private var cards: [CreditCard]
     
     private enum PeriodMode: String, CaseIterable {
         case year = "Año completo"
@@ -58,7 +58,7 @@ struct ReportsView: View {
 
     private func cardTransactionsInPeriod(year: Int, month: Int?) -> [CardTransaction] {
         cards.flatMap { $0.transactions }.filter { transaction in
-            guard !transaction.isDeleted else { return false }
+            guard !transaction.isRemoved else { return false }
             let tYear = calendar.component(.year, from: transaction.date)
             guard tYear == year else { return false }
             if let month {
