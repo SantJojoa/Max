@@ -34,6 +34,11 @@ struct BudgetsView: View {
             if currentBudgets.isEmpty {
                 emptyRow
             } else {
+                overviewCard
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+
                 ForEach(currentBudgets) { budget in
                     BudgetRow(budget: budget, spent: spent(for: budget.category))
                         .listRowBackground(Color.clear)
@@ -59,6 +64,55 @@ struct BudgetsView: View {
         .sheet(item: $editingBudget) { budget in
             AddBudgetView(budgetToEdit: budget)
         }
+    }
+
+    private var totalSpent: Double {
+        currentBudgets.reduce(0) { $0 + spent(for: $1.category) }
+    }
+
+    private var totalLimit: Double {
+        currentBudgets.reduce(0) { $0 + $1.limitAmount }
+    }
+
+    private var overviewCard: some View {
+        let ratio = totalLimit > 0 ? totalSpent / totalLimit : 0
+        let tint: Color = ratio >= 1 ? .appExpense : (ratio >= 0.8 ? .appOrange : .appAccent)
+        let daysLeft = max(0, (Calendar.current.range(of: .day, in: .month, for: .now)?.count ?? 30) - Calendar.current.component(.day, from: .now))
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Gastado este mes")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.appTextSecondary)
+                    Text(CurrencyFormat.string(for: totalSpent))
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(Color.appTextPrimary)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Text(ratio, format: .percent.precision(.fractionLength(0)))
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(tint)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(tint.opacity(0.15))
+                    .clipShape(Capsule())
+            }
+            CapsuleProgress(value: ratio, tint: tint, height: 10)
+            HStack {
+                Text(totalLimit >= totalSpent
+                     ? "Restan \(CurrencyFormat.string(for: totalLimit - totalSpent))"
+                     : "Excedido por \(CurrencyFormat.string(for: totalSpent - totalLimit))")
+                Spacer()
+                Text("\(daysLeft) días restantes")
+            }
+            .font(.caption)
+            .foregroundStyle(Color.appTextSecondary)
+        }
+        .floatingCardStyle()
     }
 
     private var emptyRow: some View {
@@ -100,30 +154,47 @@ private struct BudgetRow: View {
     let budget: Budget
     let spent: Double
 
-    private var progress: Double {
-        guard budget.limitAmount > 0 else { return 0 }
-        return min(spent / budget.limitAmount, 1.0)
+    private var ratio: Double {
+        budget.limitAmount > 0 ? spent / budget.limitAmount : 0
     }
 
     private var progressColor: Color {
-        let ratio = budget.limitAmount > 0 ? spent / budget.limitAmount : 0
         if ratio >= 1.0 { return .appExpense }
-        if ratio >= 0.8 { return .orange }
+        if ratio >= 0.8 { return .appOrange }
         return .appAccent
     }
 
+    private var statusText: String {
+        let remaining = budget.limitAmount - spent
+        if remaining < 0 { return "Excedido por \(CurrencyFormat.string(for: -remaining))" }
+        if ratio >= 0.8 { return "Quedan \(CurrencyFormat.string(for: remaining))" }
+        return "Margen disponible"
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(budget.category)
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                CategoryIcon(name: budget.category)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(budget.category)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.appTextPrimary)
+                    Text(statusText)
+                        .font(.caption)
+                        .foregroundStyle(ratio >= 1 ? Color.appExpense : Color.appTextSecondary)
+                }
                 Spacer()
-                Text("\(CurrencyFormat.string(for: spent)) / \(CurrencyFormat.string(for: budget.limitAmount))")
-                    .font(.caption)
-                    .foregroundStyle(Color.appTextSecondary)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(CurrencyFormat.string(for: spent))
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(Color.appTextPrimary)
+                    Text("de \(CurrencyFormat.string(for: budget.limitAmount))")
+                        .font(.caption)
+                        .foregroundStyle(Color.appTextSecondary)
+                }
             }
-            ProgressView(value: progress)
-                .tint(progressColor)
+            CapsuleProgress(value: ratio, tint: progressColor)
         }
         .floatingCardStyle()
     }

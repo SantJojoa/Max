@@ -31,38 +31,33 @@ struct CardDetailView: View {
 
     private var progressColor: Color {
         if usageRatio >= 0.9 { return .appExpense }
-        if usageRatio >= 0.7 { return .orange }
+        if usageRatio >= 0.7 { return .appOrange }
         return .appAccent
     }
 
     var body: some View {
         List {
             Section {
-                VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Crédito disponible")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.appTextSecondary)
+                    Text(CurrencyFormat.string(for: availableCupo))
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(availableCupo >= 0 ? Color.appTextPrimary : Color.appExpense)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                    CapsuleProgress(value: usageRatio, tint: progressColor, height: 10)
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Usado")
-                                .font(.caption)
-                                .foregroundStyle(Color.appTextSecondary)
-                            Text(CurrencyFormat.string(for: usedCupo))
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(Color.appExpense)
-                        }
+                        Text("Usado \(CurrencyFormat.string(for: usedCupo))")
                         Spacer()
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("Disponible")
-                                .font(.caption)
-                                .foregroundStyle(Color.appTextSecondary)
-                            Text(CurrencyFormat.string(for: availableCupo))
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(Color.appIncome)
-                        }
+                        Text("Uso \(usageRatio, format: .percent.precision(.fractionLength(0)))")
                     }
-
-                    ProgressView(value: usageRatio)
-                        .tint(progressColor)
+                    .font(.caption)
+                    .foregroundStyle(Color.appTextSecondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 6)
             }
             .listRowBackground(Color.appCardBackground)
 
@@ -80,13 +75,17 @@ struct CardDetailView: View {
                 } else {
                     ForEach(sortedTransactions) { transaction in
                         HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill((transaction.type == .payment ? Color.appIncome : Color.appExpense).opacity(0.15))
-                                    .frame(width: 36, height: 36)
-                                Image(systemName: transaction.type == .payment ? "arrow.down" : "cart.fill")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundStyle(transaction.type == .payment ? Color.appIncome : Color.appExpense)
+                            if transaction.type == .payment {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color.appIncome.opacity(0.18))
+                                    .frame(width: 40, height: 40)
+                                    .overlay {
+                                        Image(systemName: "arrow.down.left")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundStyle(Color.appIncome)
+                                    }
+                            } else {
+                                CategoryIcon(name: transaction.category)
                             }
 
                             VStack(alignment: .leading, spacing: 2) {
@@ -97,9 +96,10 @@ struct CardDetailView: View {
                                     .foregroundStyle(Color.appTextSecondary)
                             }
                             Spacer()
-                            Text(CurrencyFormat.string(for: transaction.amount))
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(transaction.type == .payment ? Color.appIncome : Color.appExpense)
+                            Text("\(transaction.type == .payment ? "+" : "-")\(CurrencyFormat.string(for: transaction.amount))")
+                                .font(.body.weight(.semibold))
+                                .monospacedDigit()
+                                .foregroundStyle(transaction.type == .payment ? Color.appIncome : Color.appTextPrimary)
                         }
                         .padding(.vertical, 4)
                         .contentShape(Rectangle())
@@ -113,7 +113,7 @@ struct CardDetailView: View {
             .listRowBackground(Color.appCardBackground)
         }
         .scrollContentBackground(.hidden)
-        .background(Color.appBackground)
+        .background { AppBackground() }
         .navigationTitle(card.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

@@ -62,7 +62,7 @@ struct CurrencyOnboardingView: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .padding()
             }
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .navigationBarBackButtonHidden(true)
         }
     }

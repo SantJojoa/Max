@@ -10,13 +10,34 @@ import SwiftUI
 // MARK: - Colores
 
 extension Color {
-    static let appAccent = Color(.systemGreen)
-    static let appBackground = Color(.systemGroupedBackground)
-    static let appCardBackground = Color(.secondarySystemGroupedBackground)
-    static let appTextPrimary = Color(.label)
-    static let appTextSecondary = Color(.secondaryLabel)
-    static let appIncome = Color(.systemGreen)
-    static let appExpense = Color(.systemRed)
+    /// Color que cambia entre claro y oscuro (el diseño es "dark first").
+    static func dynamic(light: UInt32, dark: UInt32) -> Color {
+        Color(UIColor { trait in
+            let hex = trait.userInterfaceStyle == .dark ? dark : light
+            return UIColor(
+                red: CGFloat((hex >> 16) & 0xFF) / 255,
+                green: CGFloat((hex >> 8) & 0xFF) / 255,
+                blue: CGFloat(hex & 0xFF) / 255,
+                alpha: 1
+            )
+        })
+    }
+
+    static let appAccent = dynamic(light: 0x34C759, dark: 0x34C759)
+    static let appBackground = dynamic(light: 0xF2F2F7, dark: 0x0A1224)
+    static let appCardBackground = dynamic(light: 0xFFFFFF, dark: 0x131D36)
+    /// Superficie sobre una tarjeta (pills, campos, teclas).
+    static let appElevated = dynamic(light: 0xF2F2F7, dark: 0x1D2A4A)
+    static let appElevatedHigh = dynamic(light: 0xE5E5EA, dark: 0x2A3B64)
+    static let appTextPrimary = dynamic(light: 0x0B1020, dark: 0xF4F7FF)
+    static let appTextSecondary = dynamic(light: 0x5F6B85, dark: 0x9CAACB)
+    static let appIncome = dynamic(light: 0x34C759, dark: 0x34C759)
+    static let appExpense = dynamic(light: 0xFF3B30, dark: 0xFF453A)
+    static let appBlue = dynamic(light: 0x007AFF, dark: 0x0A84FF)
+    static let appOrange = dynamic(light: 0xFF9500, dark: 0xFF9F0A)
+    static let appPurple = dynamic(light: 0xAF52DE, dark: 0xBF5AF2)
+    static let appPink = dynamic(light: 0xFF2D55, dark: 0xFF375F)
+    static let appHairline = dynamic(light: 0xD1D5E0, dark: 0x2A3A5E)
 }
 
 // MARK: - Escala de espaciado
@@ -34,9 +55,10 @@ enum Spacing {
 
 enum Radius {
     static let badge: CGFloat = 8
-    static let small: CGFloat = 10
-    static let medium: CGFloat = 14
-    static let large: CGFloat = 16
+    static let small: CGFloat = 12
+    static let medium: CGFloat = 16
+    static let large: CGFloat = 20
+    static let xlarge: CGFloat = 24
 }
 
 // MARK: - Estilo de "tarjeta" para agrupar contenido
@@ -45,11 +67,49 @@ struct CardBackground: ViewModifier {
     var elevated: Bool = false
 
     func body(content: Content) -> some View {
-        content
-            .padding()
-            .background(Color.appCardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
-            .modifier(SubtleShadow(active: elevated))
+        if elevated {
+            content
+                .padding()
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
+        } else {
+            content
+                .padding()
+                .background(Color.appCardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: Radius.large, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.5)
+                }
+        }
+    }
+}
+
+/// Fondo de pantalla: azul noche con manchas de color suaves para que el cristal "líquido" tenga qué refractar.
+struct AppBackground: View {
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        ZStack {
+            Color.appBackground
+            if scheme == .dark {
+                Circle()
+                    .fill(Color.appBlue.opacity(0.35))
+                    .frame(width: 320, height: 320)
+                    .blur(radius: 90)
+                    .offset(x: 140, y: -260)
+                Circle()
+                    .fill(Color.appAccent.opacity(0.18))
+                    .frame(width: 280, height: 280)
+                    .blur(radius: 90)
+                    .offset(x: -170, y: -90)
+                Circle()
+                    .fill(Color.appPurple.opacity(0.18))
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 100)
+                    .offset(x: 150, y: 300)
+            }
+        }
+        .ignoresSafeArea()
     }
 }
 
@@ -131,5 +191,81 @@ struct AppTextFieldStyle: TextFieldStyle {
             .padding(14)
             .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+
+// MARK: - Estilo visual por categoría (ícono SF Symbol + color)
+
+enum CategoryStyle {
+    static func symbol(for name: String) -> String {
+        switch name.lowercased() {
+        case "comida", "alimentación", "alimentacion": return "fork.knife"
+        case "transporte": return "car.fill"
+        case "vivienda", "hogar": return "house.fill"
+        case "entretenimiento", "ocio": return "gamecontroller.fill"
+        case "salud": return "cross.case.fill"
+        case "compras": return "bag.fill"
+        case "suscripciones": return "repeat"
+        case "salario": return "banknote.fill"
+        case "freelance": return "laptopcomputer"
+        case "regalo": return "gift.fill"
+        case "otros": return "ellipsis"
+        default: return "tag.fill"
+        }
+    }
+
+    static func color(for name: String) -> Color {
+        switch name.lowercased() {
+        case "comida", "alimentación", "alimentacion": return .appOrange
+        case "transporte": return .appBlue
+        case "vivienda", "hogar": return .appPurple
+        case "entretenimiento", "ocio": return .appPink
+        case "salud": return .appAccent
+        case "compras": return .appPink
+        case "suscripciones": return .appBlue
+        case "salario": return .appAccent
+        case "freelance": return .appBlue
+        case "regalo": return .appOrange
+        default: return .appTextSecondary
+        }
+    }
+}
+
+/// Cuadro redondeado translúcido con el ícono de una categoría.
+struct CategoryIcon: View {
+    let name: String
+    var size: CGFloat = 40
+
+    var body: some View {
+        let tint = CategoryStyle.color(for: name)
+        RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+            .fill(tint.opacity(0.18))
+            .frame(width: size, height: size)
+            .overlay {
+                Image(systemName: CategoryStyle.symbol(for: name))
+                    .font(.system(size: size * 0.45, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+    }
+}
+
+// MARK: - Barra de progreso redondeada (estilo Fitness)
+
+struct CapsuleProgress: View {
+    var value: Double
+    var tint: Color = .appAccent
+    var height: CGFloat = 8
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.appElevated)
+                Capsule()
+                    .fill(tint)
+                    .frame(width: max(height, geo.size.width * CGFloat(min(max(value, 0), 1))))
+            }
+        }
+        .frame(height: height)
     }
 }

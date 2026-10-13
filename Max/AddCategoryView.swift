@@ -18,15 +18,17 @@ struct AddCategoryView: View {
         NavigationStack {
             Form {
                 TextField("Nombre", text: $name)
+                .listRowBackground(Color.appCardBackground)
 
                 Picker("Tipo", selection: $scope) {
                     ForEach(CategoryScope.allCases, id: \.self) { s in
                         Text(s.rawValue).tag(s)
                     }
                 }
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar categoría" : "Nueva categoría")
             .toolbar {

@@ -30,7 +30,7 @@ struct AnalysisView: View {
                     }
                 }
             }
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .navigationTitle("Análisis")
             .navigationBarTitleDisplayMode(.large)
         }

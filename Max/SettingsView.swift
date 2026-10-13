@@ -99,7 +99,7 @@ struct SettingsView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .background(Color.appBackground)
+        .background { AppBackground() }
         .navigationTitle("Cuenta")
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -33,7 +33,7 @@ struct CurrencySettingsView: View {
             .listRowBackground(Color.appCardBackground)
         }
         .scrollContentBackground(.hidden)
-        .background(Color.appBackground)
+        .background { AppBackground() }
         .navigationTitle("Moneda")
         .navigationBarTitleDisplayMode(.inline)
     }

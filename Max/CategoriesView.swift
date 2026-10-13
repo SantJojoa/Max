@@ -44,7 +44,7 @@ struct CategoriesView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .background(Color.appBackground)
+        .background { AppBackground() }
         .tint(Color.appAccent)
         .navigationTitle("Categorías")
         .navigationBarTitleDisplayMode(.inline)

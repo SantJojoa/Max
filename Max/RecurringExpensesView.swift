@@ -67,36 +67,47 @@ struct RecurringExpensesView: View {
         .listRowSeparator(.hidden)
     }
 
+    private func dueText(_ item: RecurringExpense) -> String {
+        let calendar = Calendar.current
+        let today = calendar.component(.day, from: .now)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: .now)?.count ?? 30
+        let day = min(item.dayOfMonth, daysInMonth)
+        let diff = day - today
+        if diff == 0 { return "Vence hoy" }
+        if diff > 0 { return "Vence en \(diff) \(diff == 1 ? "día" : "días")" }
+        return "Cobro el día \(item.dayOfMonth)"
+    }
+
     @ViewBuilder
     private func itemRow(_ item: RecurringExpense) -> some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill((item.type == .income ? Color.appIncome : Color.appExpense).opacity(0.15))
-                    .frame(width: 44, height: 44)
-                Image(systemName: item.type == .income ? "arrow.down.circle.fill" : "repeat.circle.fill")
-                    .foregroundStyle(item.type == .income ? Color.appIncome : Color.appExpense)
-            }
+        HStack(spacing: 12) {
+            CategoryIcon(name: item.category)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.name)
-                    .font(.headline)
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(Color.appTextPrimary)
-                Text("\(item.category) · Día \(item.dayOfMonth)")
-                    .font(.caption)
-                    .foregroundStyle(Color.appTextSecondary)
-                if !item.isActive {
-                    Text("Inactivo")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Color.appTextSecondary)
+                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                    Text(item.isActive ? "\(item.category) · \(dueText(item))" : "Inactivo")
                 }
+                .font(.caption)
+                .foregroundStyle(Color.appTextSecondary)
+                .lineLimit(1)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            Text(CurrencyFormat.string(for: item.amount))
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(item.type == .income ? Color.appIncome : Color.appExpense)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(item.type == .income ? "+" : "")\(CurrencyFormat.string(for: item.amount))")
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(item.type == .income ? Color.appIncome : Color.appTextPrimary)
+                Text("Mensual")
+                    .font(.caption2)
+                    .foregroundStyle(Color.appTextSecondary)
+            }
         }
         .floatingCardStyle()
         .opacity(item.isActive ? 1.0 : 0.5)

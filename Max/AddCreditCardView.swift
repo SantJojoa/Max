@@ -46,9 +46,10 @@ struct AddCreditCardView: View {
 
                     AmountField(placeholder: "Cuota de manejo", value: $managementFee)
                 }
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar tarjeta" : "Nueva tarjeta")
             .toolbar {

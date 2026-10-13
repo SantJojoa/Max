@@ -38,6 +38,7 @@ struct AddRecurringExpenseView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                .listRowBackground(Color.appCardBackground)
 
                 Section("Detalles") {
                     TextField("Nombre (ej. Arriendo, Netflix)", text: $name)
@@ -59,9 +60,10 @@ struct AddRecurringExpenseView: View {
 
                     Toggle("Activo", isOn: $isActive)
                 }
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar gasto fijo" : "Nuevo gasto fijo")
             .toolbar {

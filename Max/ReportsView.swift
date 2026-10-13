@@ -119,166 +119,209 @@ struct ReportsView: View {
         return (purchases, payments)
     }
 
-    var body: some View {
-        List {
-            Section {
-                Picker("Periodo", selection: $mode) {
-                    ForEach(PeriodMode.allCases, id: \.self) { m in
-                        Text(m.rawValue).tag(m)
-                    }
-                }
-                .pickerStyle(.segmented)
+    // MARK: - UI
 
-                Picker("Año", selection: $selectedYear) {
-                    ForEach(availableYears, id: \.self) { year in
-                        Text(String(year)).tag(year)
+    private var heroIncome: Double { dataMode == .cash ? cashIncome : cardPayments }
+    private var heroExpense: Double { dataMode == .cash ? cashExpense : cardPurchases }
+    private var heroNet: Double { dataMode == .cash ? cashBalance : -cardNet }
+
+    private var periodTitle: String {
+        mode == .year ? String(selectedYear) : "\(monthName(selectedMonth)) \(String(selectedYear))"
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Spacing.l) {
+                filters
+                heroCard
+                monthlyTable
+            }
+            .padding(.horizontal, Spacing.l)
+            .padding(.vertical, Spacing.s)
+            
+        }
+        .scrollIndicators(.hidden)
+        .background { AppBackground() }
+        .tint(Color.appAccent)
+    }
+
+    private var filters: some View {
+        VStack(spacing: Spacing.s) {
+            Picker("Datos", selection: $dataMode) {
+                ForEach(DataMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+
+            HStack(spacing: Spacing.s) {
+                Menu {
+                    Picker("Periodo", selection: $mode) {
+                        ForEach(PeriodMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                     }
+                } label: {
+                    filterChip(icon: "calendar", text: mode.rawValue)
+                }
+
+                Menu {
+                    Picker("Año", selection: $selectedYear) {
+                        ForEach(availableYears, id: \.self) { Text(String($0)).tag($0) }
+                    }
+                } label: {
+                    filterChip(icon: "clock.arrow.circlepath", text: String(selectedYear))
                 }
 
                 if mode == .month {
-                    Picker("Mes", selection: $selectedMonth) {
-                        ForEach(1...12, id: \.self) { month in
-                            Text(monthName(month)).tag(month)
+                    Menu {
+                        Picker("Mes", selection: $selectedMonth) {
+                            ForEach(1...12, id: \.self) { Text(monthName($0)).tag($0) }
                         }
+                    } label: {
+                        filterChip(icon: "calendar.badge.clock", text: monthName(selectedMonth))
                     }
                 }
+                Spacer(minLength: 0)
             }
-            .listRowBackground(Color.appCardBackground)
+        }
+    }
 
-            Section {
-                Picker("Datos", selection: $dataMode) {
-                    ForEach(DataMode.allCases, id: \.self) { d in
-                        Text(d.rawValue).tag(d)
-                    }
-                }
-                .pickerStyle(.segmented)
+    private func filterChip(icon: String, text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.footnote)
+                .foregroundStyle(Color.appAccent)
+            Text(text)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color.appTextPrimary)
+            Image(systemName: "chevron.down")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(Color.appTextSecondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .glassEffect(.regular.interactive(), in: Capsule())
+    }
+
+    private var heroCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.l) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(dataMode == .cash ? "Balance · \(periodTitle)" : "Neto tarjetas · \(periodTitle)")
+                    .font(.footnote.weight(.semibold))
+                    .textCase(.uppercase)
+                    .tracking(1)
+                    .foregroundStyle(Color.appTextSecondary)
+                Text(CurrencyFormat.string(for: dataMode == .cash ? cashBalance : cardNet))
+                    .font(.system(size: 38, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(dataMode == .cash
+                                     ? (cashBalance >= 0 ? Color.appIncome : Color.appExpense)
+                                     : (cardNet <= 0 ? Color.appIncome : Color.appExpense))
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
             }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
+
+            HStack(spacing: Spacing.s) {
+                statTile(title: dataMode == .cash ? "Ingresos" : "Pagos", value: CurrencyFormat.string(for: heroIncome), color: .appIncome, icon: "arrow.down.left")
+                statTile(title: dataMode == .cash ? "Gastos" : "Compras", value: CurrencyFormat.string(for: heroExpense), color: .appExpense, icon: "arrow.up.right")
+            }
 
             if dataMode == .cash {
-                Section("Efectivo") {
+                VStack(spacing: 6) {
                     HStack {
-                        Text("Ingresos")
+                        Text("Ahorrado")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Color.appTextSecondary)
                         Spacer()
-                        Text(CurrencyFormat.string(for: cashIncome))
-                            .foregroundStyle(Color.appIncome)
+                        Text("\(savingsPercentage.formatted(.number.precision(.fractionLength(1))))%")
+                            .font(.footnote.weight(.bold))
+                            .foregroundStyle(Color.appTextPrimary)
                     }
-                    HStack {
-                        Text("Gastos")
-                        Spacer()
-                        Text(CurrencyFormat.string(for: cashExpense))
-                            .foregroundStyle(Color.appExpense)
-                    }
-                    HStack {
-                        Text("Balance")
-                            .font(.headline)
-                        Spacer()
-                        Text(CurrencyFormat.string(for: cashBalance))
-                            .font(.headline)
-                            .foregroundStyle(cashBalance >= 0 ? Color.appIncome : Color.appExpense)
-                    }
-                    HStack {
-                        Text("% Ahorrado")
-                        Spacer()
-                        Text(savingsPercentage, format: .number.precision(.fractionLength(1)))
-                            + Text("%")
-                    }
-                    .foregroundStyle(Color.appTextSecondary)
-                }
-                .listRowBackground(Color.appCardBackground)
-            } else {
-                Section("Tarjetas de crédito") {
-                    HStack {
-                        Text("Compras")
-                        Spacer()
-                        Text(CurrencyFormat.string(for: cardPurchases))
-                            .foregroundStyle(Color.appExpense)
-                    }
-                    HStack {
-                        Text("Pagos")
-                        Spacer()
-                        Text(CurrencyFormat.string(for: cardPayments))
-                            .foregroundStyle(Color.appIncome)
-                    }
-                    HStack {
-                        Text("Neto del periodo")
-                            .font(.headline)
-                        Spacer()
-                        Text(CurrencyFormat.string(for: cardNet))
-                            .font(.headline)
-                            .foregroundStyle(cardNet <= 0 ? Color.appIncome : Color.appExpense)
-                    }
-                }
-                .listRowBackground(Color.appCardBackground)
-            }
-
-            Section("Detalle mes a mes — \(String(selectedYear))") {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    if dataMode == .cash {
-                        Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
-                            GridRow {
-                                Text("Mes").bold()
-                                Text("Ingresos").bold()
-                                Text("Gastos").bold()
-                                Text("Balance").bold()
-                                Text("% Ahorro").bold()
-                            }
-                            .font(.caption)
-
-                            Divider().gridCellColumns(5)
-
-                            ForEach(1...12, id: \.self) { month in
-                                let data = monthlyCash(month: month)
-                                let balance = data.income - data.expense
-                                let savings = data.income > 0 ? (balance / data.income) * 100 : 0
-
-                                GridRow {
-                                    Text(shortMonthName(month))
-                                    Text(CurrencyFormat.string(for: data.income, decimals: 0))
-                                    Text(CurrencyFormat.string(for: data.expense, decimals: 0))
-                                    Text(CurrencyFormat.string(for: balance, decimals: 0))
-                                        .foregroundStyle(balance >= 0 ? Color.appIncome : Color.appExpense)
-                                    Text(savings, format: .number.precision(.fractionLength(0))) + Text("%")
-                                }
-                                .font(.caption2)
-                            }
-                        }
-                    } else {
-                        Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
-                            GridRow {
-                                Text("Mes").bold()
-                                Text("Compras").bold()
-                                Text("Pagos").bold()
-                                Text("Neto").bold()
-                            }
-                            .font(.caption)
-
-                            Divider().gridCellColumns(4)
-
-                            ForEach(1...12, id: \.self) { month in
-                                let data = monthlyCard(month: month)
-                                let net = data.purchases - data.payments
-
-                                GridRow {
-                                    Text(shortMonthName(month))
-                                    Text(CurrencyFormat.string(for: data.purchases, decimals: 0))
-                                    Text(CurrencyFormat.string(for: data.payments, decimals: 0))
-                                    Text(CurrencyFormat.string(for: net, decimals: 0))
-                                        .foregroundStyle(net <= 0 ? Color.appIncome : Color.appExpense)
-                                }
-                                .font(.caption2)
-                            }
-                        }
-                    }
+                    CapsuleProgress(value: max(savingsPercentage, 0) / 100, tint: .appAccent, height: 8)
                 }
             }
-            .listRowBackground(Color.appCardBackground)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(Color.appBackground)
-        .tint(Color.appAccent)
+        .padding(Spacing.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular.tint(Color.appBlue.opacity(0.10)), in: RoundedRectangle(cornerRadius: Radius.xlarge, style: .continuous))
+    }
+
+    private func statTile(title: String, value: String, color: Color, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(color.opacity(0.18))
+                .frame(width: 32, height: 32)
+                .overlay {
+                    Image(systemName: icon)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(color)
+                }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.caption2)
+                    .foregroundStyle(Color.appTextSecondary)
+                Text(value)
+                    .font(.subheadline.weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Spacing.s)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+    }
+
+    private var monthlyTable: some View {
+        VStack(alignment: .leading, spacing: Spacing.m) {
+            Text("Detalle mes a mes · \(String(selectedYear))")
+                .font(.headline)
+                .foregroundStyle(Color.appTextPrimary)
+
+            VStack(spacing: 0) {
+                ForEach(1...12, id: \.self) { month in
+                    monthRow(month)
+                    if month < 12 { Divider().overlay(Color.appHairline) }
+                }
+            }
+        }
+        .padding(Spacing.l)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func monthRow(_ month: Int) -> some View {
+        let isCash = dataMode == .cash
+        let cash = monthlyCash(month: month)
+        let card = monthlyCard(month: month)
+        let first = isCash ? cash.income : card.purchases
+        let second = isCash ? cash.expense : card.payments
+        let net = isCash ? cash.income - cash.expense : card.payments - card.purchases
+        let empty = first == 0 && second == 0
+
+        HStack {
+            Text(shortMonthName(month))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(empty ? Color.appTextSecondary : Color.appTextPrimary)
+                .frame(width: 44, alignment: .leading)
+            Spacer()
+            if empty {
+                Text("—")
+                    .foregroundStyle(Color.appTextSecondary)
+            } else {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(net >= 0 ? "+" : "-")\(CurrencyFormat.string(for: abs(net), decimals: 0))")
+                        .font(.subheadline.weight(.bold))
+                        .monospacedDigit()
+                        .foregroundStyle(net >= 0 ? Color.appIncome : Color.appExpense)
+                    Text("\(CurrencyFormat.string(for: first, decimals: 0)) · \(CurrencyFormat.string(for: second, decimals: 0))")
+                        .font(.caption2)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.appTextSecondary)
+                }
+            }
+        }
+        .padding(.vertical, 10)
     }
 }
 

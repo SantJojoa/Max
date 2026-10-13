@@ -20,11 +20,13 @@ struct AddSavingsGoalView: View {
         NavigationStack {
             Form {
                 TextField("Nombre (ej. Viaje, Fondo de emergencia)", text: $name)
+                .listRowBackground(Color.appCardBackground)
 
                 AmountField(placeholder: "Monto objetivo", value: $target)
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar meta" : "Nueva meta")
             .toolbar {

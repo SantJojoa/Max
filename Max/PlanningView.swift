@@ -2,46 +2,42 @@ import SwiftUI
 import SwiftData
 
 struct PlanningView: View {
+    private enum Segment: String, CaseIterable {
+        case budgets = "Presupuestos"
+        case goals = "Metas"
+        case recurring = "Gastos fijos"
+    }
+
+    @State private var segment: Segment = .budgets
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    BudgetsView()
-                } header: {
-                    sectionHeader(title: "Presupuestos", icon: "chart.pie.fill", tint: .orange)
+                    Picker("Sección", selection: $segment) {
+                        ForEach(Segment.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
 
                 Section {
-                    SavingsGoalsView()
-                } header: {
-                    sectionHeader(title: "Metas de ahorro", icon: "target", tint: .blue)
-                }
-
-                Section {
-                    RecurringExpensesView()
-                } header: {
-                    sectionHeader(title: "Gastos fijos", icon: "repeat", tint: .purple)
+                    switch segment {
+                    case .budgets: BudgetsView()
+                    case .goals: SavingsGoalsView()
+                    case .recurring: RecurringExpensesView()
+                    }
                 }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
+            .animation(.snappy(duration: 0.2), value: segment)
             .navigationTitle("Planificación")
             .navigationBarTitleDisplayMode(.large)
         }
-    }
-
-    @ViewBuilder
-    private func sectionHeader(title: String, icon: String, tint: Color) -> some View {
-        HStack(spacing: Spacing.s) {
-            IconBadge(systemImage: icon, tint: tint, size: 24)
-            Text(title)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(Color.appTextPrimary)
-        }
-        .textCase(nil)
-        .padding(.top, Spacing.s)
-        .padding(.bottom, Spacing.xs)
     }
 }
 

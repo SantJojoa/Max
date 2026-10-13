@@ -28,15 +28,17 @@ struct AddFundsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                .listRowBackground(Color.appCardBackground)
 
                 Section {
                     AmountField(value: $amount)
                 } footer: {
                     Text("Ahorrado actualmente: \(CurrencyFormat.string(for: goal.savedAmount))")
                 }
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(goal.name)
             .toolbar {

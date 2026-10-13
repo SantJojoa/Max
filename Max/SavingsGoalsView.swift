@@ -75,38 +75,53 @@ struct SavingsGoalsView: View {
     private func goalRow(_ goal: SavingsGoal) -> some View {
         let progress = goal.targetAmount > 0 ? min(goal.savedAmount / goal.targetAmount, 1.0) : 0
         let isComplete = goal.savedAmount >= goal.targetAmount && goal.targetAmount > 0
+        let tint: Color = isComplete ? .appIncome : .appBlue
 
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: isComplete ? "checkmark.circle.fill" : "target")
-                    .foregroundStyle(isComplete ? Color.appIncome : Color.appAccent)
+        HStack(spacing: Spacing.l) {
+            ZStack {
+                Circle()
+                    .stroke(tint.opacity(0.18), lineWidth: 9)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(tint, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 0) {
+                    Image(systemName: isComplete ? "checkmark" : "target")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(tint)
+                    Text(progress, format: .percent.precision(.fractionLength(0)))
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(Color.appTextPrimary)
+                }
+            }
+            .frame(width: 76, height: 76)
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(goal.name)
-                    .font(.headline)
-                Spacer()
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.appTextPrimary)
+                    .lineLimit(1)
+                Text("\(CurrencyFormat.string(for: goal.savedAmount)) / \(CurrencyFormat.string(for: goal.targetAmount))")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(Color.appTextSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Button {
                     fundingGoal = goal
                 } label: {
-                    Image(systemName: "plus.circle")
+                    Label("Agregar fondos", systemImage: "plus.circle.fill")
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(Color.appAccent)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.appAccent.opacity(0.15))
+                        .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .padding(.top, 2)
             }
-
-            HStack {
-                Text(CurrencyFormat.string(for: goal.savedAmount))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.appTextPrimary)
-                Text("/ \(CurrencyFormat.string(for: goal.targetAmount))")
-                    .font(.caption)
-                    .foregroundStyle(Color.appTextSecondary)
-                Spacer()
-                Text(progress, format: .percent.precision(.fractionLength(0)))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.appTextSecondary)
-            }
-
-            ProgressView(value: progress)
-                .tint(isComplete ? Color.appIncome : Color.appAccent)
+            Spacer(minLength: 0)
         }
         .floatingCardStyle()
     }

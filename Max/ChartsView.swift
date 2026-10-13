@@ -89,7 +89,7 @@ struct ChartsView: View {
 
     private func cupoProgressColor(_ ratio: Double) -> Color {
         if ratio >= 0.9 { return .appExpense }
-        if ratio >= 0.7 { return .orange }
+        if ratio >= 0.7 { return .appOrange }
         return .appAccent
     }
 
@@ -183,8 +183,10 @@ struct ChartsView: View {
                                 angularInset: 1.5
                             )
                             .foregroundStyle(by: .value("Categoría", item.category))
-                            .cornerRadius(4)
+                            .cornerRadius(5)
                         }
+                        .chartForegroundStyleScale(domain: categoryDomain(expensesByCategory), range: categoryRange(expensesByCategory))
+                        .chartLegend(position: .bottom, spacing: 12)
                         .frame(height: 260)
                     }
                 }
@@ -197,7 +199,11 @@ struct ChartsView: View {
                         )
                         .foregroundStyle(by: .value("Tipo", item.type.rawValue))
                         .position(by: .value("Tipo", item.type.rawValue))
+                        .cornerRadius(5)
                     }
+                    .chartForegroundStyleScale([TransactionType.income.rawValue: Color.appIncome, TransactionType.expense.rawValue: Color.appExpense])
+                    .chartYAxis { AxisMarks { _ in AxisGridLine().foregroundStyle(Color.appHairline); AxisValueLabel().foregroundStyle(Color.appTextSecondary) } }
+                    .chartLegend(position: .bottom, spacing: 12)
                     .frame(height: 220)
                 }
 
@@ -217,8 +223,10 @@ struct ChartsView: View {
                                 angularInset: 1.5
                             )
                             .foregroundStyle(by: .value("Categoría", item.category))
-                            .cornerRadius(4)
+                            .cornerRadius(5)
                         }
+                        .chartForegroundStyleScale(domain: categoryDomain(cardExpensesByCategory), range: categoryRange(cardExpensesByCategory))
+                        .chartLegend(position: .bottom, spacing: 12)
                         .frame(height: 260)
                     }
                 }
@@ -263,11 +271,13 @@ struct ChartsView: View {
                         )
                         .foregroundStyle(Color.appAccent)
                         .interpolationMethod(.catmullRom)
-                        PointMark(
+                        .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
+                        AreaMark(
                             x: .value("Mes", item.monthLabel),
                             y: .value("Balance", item.value)
                         )
-                        .foregroundStyle(Color.appAccent)
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(LinearGradient(colors: [Color.appAccent.opacity(0.35), .clear], startPoint: .top, endPoint: .bottom))
                     }
                     .frame(height: 200)
                 }
@@ -288,6 +298,9 @@ struct ChartsView: View {
                             )
                             .foregroundStyle(by: .value("Categoría", item.category))
                         }
+                        .cornerRadius(5)
+                        .chartForegroundStyleScale(domain: categoryDomain(topCategories), range: categoryRange(topCategories))
+                        .chartLegend(.hidden)
                         .frame(height: CGFloat(topCategories.count * 40 + 20))
                     }
                 }
@@ -342,17 +355,29 @@ struct ChartsView: View {
             }
             .padding(.vertical)
             .padding(.horizontal)
+            .padding(.bottom, 90)
         }
-        .background(Color.appBackground)
+        .scrollIndicators(.hidden)
+        .background { AppBackground() }
+    }
+
+    private func categoryDomain(_ items: [CategoryTotal]) -> [String] {
+        items.map(\.category)
+    }
+
+    private func categoryRange(_ items: [CategoryTotal]) -> [Color] {
+        items.map { CategoryStyle.color(for: $0.category) }
     }
 
     @ViewBuilder
     private func chartCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             Text(title)
-                .font(.headline)
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .foregroundStyle(Color.appTextPrimary)
             content()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .floatingCardStyle()
     }
 }

@@ -46,6 +46,7 @@ struct AddCardTransactionView: View {
         NavigationStack {
             Form {
                 AmountField(value: $amount)
+                .listRowBackground(Color.appCardBackground)
 
                 if type == .purchase {
                     Picker("Categoría", selection: $category) {
@@ -54,14 +55,17 @@ struct AddCardTransactionView: View {
                             Text(cat).tag(cat)
                         }
                     }
+                    .listRowBackground(Color.appCardBackground)
                 }
 
                 DatePicker("Fecha", selection: $date, displayedComponents: .date)
+                .listRowBackground(Color.appCardBackground)
 
                 TextField("Nota (opcional)", text: $note)
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(navigationTitleText)
             .toolbar {

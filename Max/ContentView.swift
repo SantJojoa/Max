@@ -6,7 +6,7 @@ struct ContentView: View {
     @Query(filter: #Predicate<Transaction> { !$0.isDeleted }, sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @State private var showingAddView = false
     @State private var editingTransaction: Transaction?
-    @State private var selectedType: TransactionType = .expense
+    @AppStorage("hideBalance") private var hideBalance = false
 
     @State private var searchText = ""
     @State private var dateFilter: DateFilter = .all
@@ -40,33 +40,6 @@ struct ContentView: View {
         return transactions.filter {
             calendar.component(.month, from: $0.date) == month &&
             calendar.component(.year, from: $0.date) == year
-        }
-    }
-
-    private func categoryBreakdown(for type: TransactionType) -> [(category: String, total: Double)] {
-        let items = currentMonthTransactions.filter { $0.type == type }
-        let grouped = Dictionary(grouping: items, by: { $0.category })
-        return grouped
-            .map { (category: $0.key, total: $0.value.reduce(0) { $0 + $1.amount }) }
-            .sorted { $0.total > $1.total }
-            .prefix(4)
-            .map { $0 }
-    }
-
-    private func categoryEmoji(_ category: String) -> String {
-        switch category.lowercased() {
-        case "comida": return "🍔"
-        case "transporte": return "🚗"
-        case "vivienda": return "🏠"
-        case "entretenimiento": return "🎮"
-        case "salud": return "💊"
-        case "compras": return "🛍️"
-        case "suscripciones": return "🔁"
-        case "salario": return "💰"
-        case "freelance": return "💻"
-        case "regalo": return "🎁"
-        case "otros": return "🔖"
-        default: return "🏷️"
         }
     }
 
@@ -106,88 +79,84 @@ struct ContentView: View {
         dateFilter != .all
     }
 
+    private var filterTitle: String {
+        switch dateFilter {
+        case .all: return "Todo"
+        case .thisMonth: return "Este mes"
+        case .last3Months: return "3 meses"
+        case .custom: return "Personalizado"
+        }
+    }
+
+    private var monthIncome: Double {
+        currentMonthTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+    }
+
+    private var monthExpense: Double {
+        currentMonthTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+    }
+
+    private var groupedTransactions: [(day: Date, items: [Transaction])] {
+        let calendar = Calendar.current
+        let groups = Dictionary(grouping: filteredTransactions) { calendar.startOfDay(for: $0.date) }
+        return groups
+            .map { (day: $0.key, items: $0.value.sorted { $0.date > $1.date }) }
+            .sorted { $0.day > $1.day }
+    }
+
+    private func dayTitle(_ day: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(day) { return "Hoy" }
+        if calendar.isDateInYesterday(day) { return "Ayer" }
+        return day.formatted(.dateTime.weekday(.wide).day().month(.wide))
+    }
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    VStack(spacing: Spacing.l) {
-                        VStack(spacing: 4) {
-                            Text("Total")
-                                .font(.subheadline)
-                                .foregroundStyle(Color.appTextSecondary)
-                            Text(CurrencyFormat.string(for: balance))
-                                .font(.system(size: 40, weight: .bold, design: .rounded))
-                                .foregroundStyle(balance >= 0 ? Color.appIncome : Color.appExpense)
-                        }
-
-                        HStack(spacing: Spacing.s) {
-                            typeSwitchPill(type: .expense, title: "Gastos", amount: totalExpense, color: .appExpense, icon: "minus.circle.fill")
-                            typeSwitchPill(type: .income, title: "Ingresos", amount: totalIncome, color: .appIncome, icon: "plus.circle.fill")
-                        }
-
-                        VStack(alignment: .leading, spacing: Spacing.m) {
-                            Text(selectedType == .income ? "Ingresos por categoría (este mes)" : "Gastos por categoría (este mes)")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color.appTextPrimary)
-
-                            categoryBarChart()
-                        }
-                        .padding(Spacing.m)
-                        .background(Color.appCardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: Radius.large, style: .continuous))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.s)
+                    heroCard
                 }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(top: Spacing.s, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))
 
-                Section {
-                    if filteredTransactions.isEmpty {
-                        Text(searchText.isEmpty ? "No hay movimientos en este rango." : "Sin resultados para \"\(searchText)\".")
-                            .foregroundStyle(Color.appTextSecondary)
-                    } else {
-                        ForEach(filteredTransactions) { transaction in
-                            HStack(spacing: 12) {
-                                ZStack {
-                                    Circle()
-                                        .fill((transaction.type == .income ? Color.appIncome : Color.appExpense).opacity(0.15))
-                                        .frame(width: 36, height: 36)
-                                    Image(systemName: transaction.type == .income ? "arrow.down" : "arrow.up")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(transaction.type == .income ? Color.appIncome : Color.appExpense)
-                                }
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(transaction.category)
-                                        .font(.headline)
-                                    Text(transaction.date, format: .dateTime.day().month().year())
-                                        .font(.caption)
-                                        .foregroundStyle(Color.appTextSecondary)
-                                }
-                                Spacer()
-                                Text(CurrencyFormat.string(for: transaction.amount))
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(transaction.type == .income ? Color.appIncome : Color.appExpense)
-                            }
-                            .padding(.vertical, 4)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                editingTransaction = transaction
-                            }
-                        }
-                        .onDelete(perform: deleteTransactions)
+                if filteredTransactions.isEmpty {
+                    Section {
+                        ContentUnavailableView(
+                            searchText.isEmpty ? "Sin movimientos todavía" : "Sin resultados",
+                            systemImage: searchText.isEmpty ? "tray" : "magnifyingglass",
+                            description: Text(searchText.isEmpty ? "Toca + para registrar tu primer movimiento." : "Nada coincide con \"\(searchText)\".")
+                        )
                     }
-                } header: {
-                    Text(isFiltering ? "Movimientos (filtrado)" : "Movimientos")
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                } else {
+                    ForEach(groupedTransactions, id: \.day) { group in
+                        Section {
+                            ForEach(group.items) { transaction in
+                                transactionRow(transaction)
+                                    .listRowBackground(Rectangle().fill(.ultraThinMaterial).overlay(Color.white.opacity(0.03)))
+                                    .listRowSeparatorTint(Color.appHairline)
+                                    .listRowInsets(EdgeInsets(top: 0, leading: Spacing.l, bottom: 0, trailing: Spacing.l))
+                            }
+                            .onDelete { offsets in
+                                for index in offsets { delete(group.items[index]) }
+                            }
+                        } header: {
+                            Text(dayTitle(group.day))
+                                .font(.footnote.weight(.semibold))
+                                .textCase(.uppercase)
+                                .tracking(0.6)
+                                .foregroundStyle(Color.appTextSecondary)
+                        }
+                    }
                 }
-                .listRowBackground(Color.appCardBackground)
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Buscar por categoría o nota")
+            .background { AppBackground() }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Buscar por categoría o nota")
             .navigationTitle("Resumen")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -195,58 +164,14 @@ struct ContentView: View {
                     NavigationLink {
                         SettingsView()
                     } label: {
-                        Image(systemName: "person.circle")
+                        Image(systemName: "person.crop.circle.fill")
                             .font(.title2)
-                            .foregroundStyle(Color.appAccent)
-                    }
-                }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Menu {
-                        Button {
-                            dateFilter = .all
-                        } label: {
-                            HStack {
-                                Text("Todos")
-                                if dateFilter == .all { Image(systemName: "checkmark") }
-                            }
-                        }
-                        Button {
-                            dateFilter = .thisMonth
-                        } label: {
-                            HStack {
-                                Text("Este mes")
-                                if dateFilter == .thisMonth { Image(systemName: "checkmark") }
-                            }
-                        }
-                        Button {
-                            dateFilter = .last3Months
-                        } label: {
-                            HStack {
-                                Text("Últimos 3 meses")
-                                if dateFilter == .last3Months { Image(systemName: "checkmark") }
-                            }
-                        }
-                        Button {
-                            showingCustomRange = true
-                        } label: {
-                            HStack {
-                                Text("Rango personalizado…")
-                                if dateFilter == .custom { Image(systemName: "checkmark") }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                            .foregroundStyle(Color.appAccent)
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(Color.appTextSecondary)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingAddView = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Color.appAccent)
-                    }
+                    filterMenu
                 }
             }
             .sheet(isPresented: $showingAddView) {
@@ -268,7 +193,7 @@ struct ContentView: View {
                         DatePicker("Hasta", selection: $customEnd, displayedComponents: .date)
                     }
                     .scrollContentBackground(.hidden)
-                    .background(Color.appBackground)
+                    .background { AppBackground() }
                     .tint(Color.appAccent)
                     .navigationTitle("Rango personalizado")
                     .toolbar {
@@ -289,90 +214,138 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    private func typeSwitchPill(type: TransactionType, title: String, amount: Double, color: Color, icon: String) -> some View {
-        let isSelected = selectedType == type
+    // MARK: - Hero
 
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                selectedType = type
+    private var heroCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.l) {
+            HStack {
+                Text("Balance total")
+                    .font(.footnote.weight(.semibold))
+                    .textCase(.uppercase)
+                    .tracking(1)
+                    .foregroundStyle(Color.appTextSecondary)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { hideBalance.toggle() }
+                } label: {
+                    Image(systemName: hideBalance ? "eye.slash" : "eye")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.appTextSecondary)
+                }
+                .buttonStyle(.plain)
+                Spacer()
             }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
+
+            Text(hideBalance ? "••••••" : CurrencyFormat.string(for: balance))
+                .font(.system(size: 42, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(LinearGradient(colors: [Color.appTextPrimary, Color.appTextPrimary.opacity(0.75)], startPoint: .top, endPoint: .bottom))
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+                .contentTransition(.numericText())
+
+            HStack(spacing: Spacing.s) {
+                statPill(title: "Ingresos del mes", amount: monthIncome, color: .appIncome, icon: "arrow.down.left")
+                statPill(title: "Gastos del mes", amount: monthExpense, color: .appExpense, icon: "arrow.up.right")
+            }
+        }
+        .padding(Spacing.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular.tint(Color.appBlue.opacity(0.10)), in: RoundedRectangle(cornerRadius: Radius.xlarge, style: .continuous))
+    }
+
+    private func statPill(title: String, amount: Double, color: Color, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(color.opacity(0.18))
+                .frame(width: 32, height: 32)
+                .overlay {
+                    Image(systemName: icon)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(color)
+                }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.caption2)
+                    .foregroundStyle(Color.appTextSecondary)
+                    .lineLimit(1)
+                Text(hideBalance ? "••••" : CurrencyFormat.string(for: amount))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
                     .foregroundStyle(color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Spacing.s)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+    }
+
+    // MARK: - Filtro
+
+    private var filterMenu: some View {
+        Menu {
+            Button { dateFilter = .all } label: { Label("Todos", systemImage: dateFilter == .all ? "checkmark" : "") }
+            Button { dateFilter = .thisMonth } label: { Label("Este mes", systemImage: dateFilter == .thisMonth ? "checkmark" : "") }
+            Button { dateFilter = .last3Months } label: { Label("Últimos 3 meses", systemImage: dateFilter == .last3Months ? "checkmark" : "") }
+            Button { showingCustomRange = true } label: { Label("Rango personalizado…", systemImage: dateFilter == .custom ? "checkmark" : "") }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "calendar")
+                    .font(.footnote)
+                    .foregroundStyle(Color.appAccent)
+                Text(filterTitle)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.appTextPrimary)
+                Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Color.appTextSecondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .glassEffect(.regular.interactive(), in: Capsule())
+        }
+    }
+
+    // MARK: - Fila
+
+    private func transactionRow(_ transaction: Transaction) -> some View {
+        Button {
+            editingTransaction = transaction
+        } label: {
+            HStack(spacing: 12) {
+                CategoryIcon(name: transaction.category)
+
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
+                    Text(transaction.note.isEmpty ? transaction.category : transaction.note)
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(Color.appTextPrimary)
+                        .lineLimit(1)
+                    Text("\(transaction.category) · \(transaction.date.formatted(date: .omitted, time: .shortened))")
                         .font(.caption)
                         .foregroundStyle(Color.appTextSecondary)
-                    Text(CurrencyFormat.string(for: amount))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.appTextPrimary)
+                        .lineLimit(1)
                 }
+
+                Spacer(minLength: 8)
+
+                Text("\(transaction.type == .income ? "+" : "-")\(CurrencyFormat.string(for: transaction.amount))")
+                    .font(.system(.body, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(transaction.type == .income ? Color.appIncome : Color.appTextPrimary)
             }
-            .padding(.horizontal, Spacing.m)
-            .padding(.vertical, Spacing.s)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(color.opacity(isSelected ? 0.18 : 0.08))
-            .overlay {
-                RoundedRectangle(cornerRadius: Radius.medium, style: .continuous)
-                    .strokeBorder(color.opacity(isSelected ? 0.6 : 0), lineWidth: 1.5)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
-    @ViewBuilder
-    private func categoryBarChart() -> some View {
-        let items = categoryBreakdown(for: selectedType)
-        let barColor: Color = selectedType == .income ? .appIncome : .appExpense
-
-        if items.isEmpty {
-            Text(selectedType == .income ? "Sin ingresos este mes." : "Sin gastos este mes.")
-                .font(.footnote)
-                .foregroundStyle(Color.appTextSecondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, Spacing.l)
-        } else {
-            let maxTotal = items.map(\.total).max() ?? 1
-
-            HStack(alignment: .bottom, spacing: Spacing.m) {
-                ForEach(items, id: \.category) { item in
-                    VStack(spacing: Spacing.xs) {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(barColor.opacity(0.85))
-                            .frame(height: max(24, 100 * CGFloat(item.total / maxTotal)))
-
-                        Text(categoryEmoji(item.category))
-                            .font(.system(size: 18))
-
-                        Text(item.category)
-                            .font(.caption2)
-                            .foregroundStyle(Color.appTextSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-
-                        Text(CurrencyFormat.string(for: item.total, decimals: 0))
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Color.appTextPrimary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-            .frame(height: 170, alignment: .bottom)
-        }
-    }
-
-    private func deleteTransactions(at offsets: IndexSet) {
-        for index in offsets {
-            let transaction = filteredTransactions[index]
-            transaction.isDeleted = true
-            transaction.updatedAt = .now
-            transaction.needsSync = true
-        }
+    private func delete(_ transaction: Transaction) {
+        transaction.isDeleted = true
+        transaction.updatedAt = .now
+        transaction.needsSync = true
     }
 }
 

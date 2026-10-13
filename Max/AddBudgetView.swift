@@ -34,11 +34,13 @@ struct AddBudgetView: View {
                         Text(cat).tag(cat)
                     }
                 }
+                .listRowBackground(Color.appCardBackground)
 
                 AmountField(placeholder: "Límite mensual", value: $limit)
+                .listRowBackground(Color.appCardBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background { AppBackground() }
             .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar presupuesto" : "Nuevo presupuesto")
             .toolbar {
