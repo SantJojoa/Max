@@ -1,10 +1,3 @@
-//
-//  CardTransaction.swift
-//  Max
-//
-//  Created by Santiago Jojoa on 29/08/26.
-//
-
 import Foundation
 import SwiftData
 
@@ -22,6 +15,11 @@ final class CardTransaction {
     var note: String
     var card: CreditCard?
 
+    var remoteID: UUID?
+    var updatedAt: Date
+    var isDeleted: Bool
+    var needsSync: Bool
+
     init(amount: Double, type: CardTransactionType, category: String = "", date: Date = .now, note: String = "", card: CreditCard? = nil) {
         self.amount = amount
         self.type = type
@@ -29,5 +27,9 @@ final class CardTransaction {
         self.date = date
         self.note = note
         self.card = card
+        self.remoteID = nil
+        self.updatedAt = .now
+        self.isDeleted = false
+        self.needsSync = true
     }
 }

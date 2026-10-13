@@ -16,17 +16,20 @@ struct AddCardTransactionView: View {
     let type: CardTransactionType
     var transactionToEdit: CardTransaction?
 
-    @State private var amountText: String = ""
+    @State private var amount: Double = 0
     @State private var category: String = ""
     @State private var date: Date = .now
     @State private var note: String = ""
 
-    private let purchaseCategories = ["Comida", "Transporte", "Compras", "Entretenimiento", "Salud", "Suscripciones", "Otros"]
+    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
+    private var purchaseCategories: [String] {
+        allCategories.filter { $0.scope == .card }.map { $0.name }
+    }
 
     private var isEditing: Bool { transactionToEdit != nil }
 
     private var isValid: Bool {
-        guard let amount = Double(amountText), amount > 0 else { return false }
+        guard amount > 0 else { return false }
         if type == .purchase { return !category.isEmpty }
         return true
     }
@@ -42,8 +45,7 @@ struct AddCardTransactionView: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Monto", text: $amountText)
-                    .keyboardType(.decimalPad)
+                AmountField(value: $amount)
 
                 if type == .purchase {
                     Picker("Categoría", selection: $category) {
@@ -58,6 +60,9 @@ struct AddCardTransactionView: View {
 
                 TextField("Nota (opcional)", text: $note)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .tint(Color.appAccent)
             .navigationTitle(navigationTitleText)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -66,13 +71,12 @@ struct AddCardTransactionView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") { save() }
                         .disabled(!isValid)
+                        .fontWeight(.semibold)
                 }
             }
             .onAppear {
                 if let transaction = transactionToEdit {
-                    amountText = transaction.amount == transaction.amount.rounded()
-                        ? String(Int(transaction.amount))
-                        : String(transaction.amount)
+                    amount = transaction.amount
                     category = transaction.category
                     date = transaction.date
                     note = transaction.note
@@ -82,7 +86,6 @@ struct AddCardTransactionView: View {
     }
 
     private func save() {
-        guard let amount = Double(amountText) else { return }
         let finalCategory = type == .purchase ? category : "Pago"
 
         if let transaction = transactionToEdit {
@@ -90,6 +93,8 @@ struct AddCardTransactionView: View {
             transaction.category = finalCategory
             transaction.date = date
             transaction.note = note
+            transaction.updatedAt = .now
+            transaction.needsSync = true
         } else {
             let transaction = CardTransaction(amount: amount, type: type, category: finalCategory, date: date, note: note, card: card)
             modelContext.insert(transaction)

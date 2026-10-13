@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        name="viewport" />
+    <meta content="mobile_stack" name="shell-type" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style>
+        @layer base {
+
+            html,
+            body {
+                width: 100vw;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                overscroll-behavior: none;
+                background-color: #000000;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+            }
+
+            .pb-safe {
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+
+            .pt-safe {
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+
+            main>:first-child {
+                margin-top: 0 !important;
+            }
+
+            main>:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-fixed": "#001a41", "surface-container-high": "#2c2c2e", "background": "#000000", "on-primary-fixed": "#002107", "on-surface": "#ffffff", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#00531c", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb4aa", "primary-fixed-dim": "#53e16f", "on-surface-variant": "#8e8e93", "surface-variant": "#2c2c2e", "secondary-fixed": "#d8e2ff", "on-background": "#ffffff", "on-tertiary-fixed": "#410001", "on-secondary-container": "#fefcff", "on-tertiary-fixed-variant": "#930005", "inverse-primary": "#53e16f", "surface-bright": "#2c2c2e", "surface-container-highest": "#3a3a3c", "primary-container": "#34c759", "surface-container": "#242426", "on-primary": "#ffffff", "on-secondary-fixed-variant": "#004493", "surface-tint": "#34c759", "tertiary-fixed": "#ffdad5", "surface-container-lowest": "#1c1c1e", "outline": "#48484a", "primary-fixed": "#72fe88", "error": "#ff453a", "secondary": "#0a84ff", "on-error-container": "#ffdad6", "surface-container-low": "#161618", "tertiary": "#ff453a", "on-error": "#ffffff", "outline-variant": "#38383a", "inverse-on-surface": "#1a1b1f", "secondary-container": "#0070eb", "primary": "#34c759", "inverse-surface": "#ffffff", "on-primary-container": "#004d1a", "tertiary-container": "#ff8e80", "surface": "#000000", "secondary-fixed-dim": "#adc6ff", "on-tertiary-container": "#890005", "surface-dim": "#121214", "error-container": "#93000a" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "gutter": "1rem", "space-xl": "1.5rem", "space-lg": "1.25rem", "space-sm": "0.5rem", "margin": "1rem", "space-xs": "0.25rem", "space-md": "1rem" }, fontFamily: { "headline-xl": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "numeric-metric": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "body-lg-bold": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"] }, fontSize: { "headline-xl": ["34px", { "lineHeight": "41px", "letterSpacing": "0.37px", "fontWeight": "700" }], "body-md": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.23px", "fontWeight": "400" }], "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0px", "fontWeight": "400" }], "numeric-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.5px", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "0.34px", "fontWeight": "700" }], "body-lg": ["17px", { "lineHeight": "22px", "letterSpacing": "-0.43px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.26px", "fontWeight": "600" }], "headline-xl-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "0.35px", "fontWeight": "700" }], "headline-sm": ["20px", { "lineHeight": "25px", "letterSpacing": "-0.45px", "fontWeight": "600" }], "body-lg-bold": ["17px", { "lineHeight": "22px", "letterSpacing": "-0.43px", "fontWeight": "600" }], "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.08px", "fontWeight": "500" }] } } } };</script>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-[#000000] text-white flex flex-col min-h-screen antialiased selection:bg-primary selection:text-black">
+    <header class="fixed top-0 w-full z-50 bg-[#000000]/80 backdrop-blur-xl pt-safe">
+        <div class="h-28 px-margin flex flex-col justify-between pb-space-sm">
+            <div class="relative flex items-center justify-between w-full h-8">
+                <div class="flex items-center text-white text-label-md font-label-md"><span
+                        class="font-semibold">9:41</span></div>
+                <div
+                    class="absolute left-1/2 -translate-x-1/2 top-0 h-7 w-28 bg-[#1c1c1e] rounded-full flex items-center justify-end pr-2.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-[#2c2c2e]"></div>
+                </div>
+                <div class="flex items-center gap-1.5 text-white"><span
+                        class="material-symbols-outlined text-[15px]">signal_cellular_4_bar</span><span
+                        class="material-symbols-outlined text-[15px]">wifi</span><span
+                        class="material-symbols-outlined text-[18px]">battery_full</span></div>
+            </div>
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-space-xs"><button
+                        class="w-11 h-11 flex items-center justify-center rounded-full text-primary hover:bg-[#2c2c2e] active:scale-95 transition-all"
+                        onclick="history.back()"><span
+                            class="material-symbols-outlined text-[26px]">arrow_back_ios_new</span></button><img
+                        alt="Max Logo" class="h-7 w-auto object-contain brightness-110"
+                        src="https://lh3.googleusercontent.com/aida/AEtjO1VAo1NxLiDYxqixjSPP7pRJcE4KSJeAYNmGGv0Drko_7JPFG9qTXngE_-ilmhdfsRLK3z0JJoajf2LP66MxuxRVQ1o1jOkiEIwSMqKWxptXWBqn776fix9OaWjUtqTxiUrTlQUUSXZgQzEEr8bi_YAxCsIWUNR62F9kqji3ydBuIAUCo_f8CVs8VubqupjJnJZDbVucc5Q9onBWImO_vcl_z4ogHN520Xid6syExXQhfchzzLDPkmYvPxoH" />
+                    <h1 class="text-headline-sm font-headline-sm text-white truncate max-w-[180px]">Nueva Transacción
+                    </h1>
+                </div>
+                <div class="flex items-center gap-space-xs"><img alt="Profile"
+                        class="w-8 h-8 rounded-full object-cover ring-1 ring-[#38383a]"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuACUmyEFrD_WY3M_yUG6Lmzc_XfarqExWzgEPCS7qPDjJQehNS7C0SMzzqhmJZroblop1o9okvdec70kKiyNoxWppbKaXIOslelePwUBfG5vGG-d8dazo6tAVYj4Kmf8_AQ9w_iyVkjEOdnc0u6SI4uZIwmkU5zjzN9CpBB2hDUI4-gITHdDh2Xe6rsUL14sdmdfG2ZBByqlYlHhlAifWw-OYfXoSnkfXIOV2wtKAZpqa9_qIjDZoekxw" />
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="flex flex-col relative w-full pt-28 pb-safe bg-[#000000] min-h-screen">
+        <div class="flex flex-col w-full">
+            <!-- Presentation Scrim & Native Bottom Sheet Canvas -->
+            <div
+                class="w-full max-w-lg mx-auto bg-[#1C1C1E] rounded-t-[36px] shadow-2xl flex flex-col overflow-hidden pb-8 border-t border-[#2C2C2E]/60">
+                <!-- Grabber Handle & Modal Header -->
+                <div class="w-full flex flex-col items-center pt-3 pb-2 px-margin">
+                    <!-- iOS Drag Indicator Pill -->
+                    <div class="w-10 h-1.5 bg-[#48484A] rounded-full mb-3"></div>
+                    <!-- Sheet Navigation Bar -->
+                    <div class="w-full flex items-center justify-between">
+                        <button
+                            class="text-[#0A84FF] font-body-lg text-body-lg active:opacity-60 transition-opacity py-1 px-2 -ml-2 rounded-lg"
+                            type="button">
+                            Cancelar
+                        </button>
+                        <span class="font-headline-sm text-headline-sm text-white font-semibold tracking-tight">
+                            Nueva transacción
+                        </span>
+                        <button
+                            class="bg-[#34C759] text-white font-body-lg-bold text-body-lg-bold px-4 py-1.5 rounded-full active:scale-95 transition-all shadow-sm"
+                            id="btn-save-top" type="button">
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+                <!-- 1. Native Segmented Control (iOS 18 Squircle Pill) -->
+                <div class="px-margin pt-2 pb-3">
+                    <div
+                        class="w-full bg-[#2C2C2E] p-1 rounded-2xl flex items-center justify-between relative shadow-inner">
+                        <button
+                            class="flex-1 py-1.5 text-center text-label-md font-label-md font-semibold rounded-xl transition-all duration-200 bg-[#3A3A3C] text-white shadow-sm"
+                            id="tab-gasto" onclick="setTxType('gasto')">
+                            Gasto
+                        </button>
+                        <button
+                            class="flex-1 py-1.5 text-center text-label-md font-label-md font-medium text-[#8E8E93] rounded-xl transition-all duration-200"
+                            id="tab-ingreso" onclick="setTxType('ingreso')">
+                            Ingreso
+                        </button>
+                        <button
+                            class="flex-1 py-1.5 text-center text-label-md font-label-md font-medium text-[#8E8E93] rounded-xl transition-all duration-200"
+                            id="tab-transfer" onclick="setTxType('transfer')">
+                            Transferencia
+                        </button>
+                    </div>
+                </div>
+                <!-- 2. Giant Dynamic Numeric Display with Blinking iOS Cursor -->
+                <div class="flex flex-col items-center justify-center py-5 px-margin text-center">
+                    <div class="flex items-center justify-center space-x-1">
+                        <span
+                            class="font-headline-xl-mobile text-headline-xl-mobile text-[#8E8E93] font-medium select-none tracking-tight">€</span>
+                        <span class="font-headline-xl text-headline-xl text-white font-bold tracking-tight"
+                            id="amount-display">45,50</span>
+                        <!-- Native Blinking Cursor Pipe -->
+                        <span
+                            class="w-[3px] h-9 bg-[#34C759] rounded-full animate-pulse ml-0.5 shadow-[0_0_8px_rgba(52,199,89,0.8)]"></span>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-full bg-[#2C2C2E] text-[#8E8E93]">
+                        <span class="material-symbols-outlined text-[16px] text-[#34C759]"
+                            style="font-variation-settings: 'FILL' 1;">insights</span>
+                        <span class="text-label-sm font-label-sm text-[#A1A1A6]">Dentro del presupuesto semanal</span>
+                    </div>
+                </div>
+                <!-- 3. Category Horizontal Carousel (Delightful Micro-interactions) -->
+                <div class="w-full flex flex-col space-y-2 pt-1 pb-3">
+                    <div class="px-margin flex items-center justify-between">
+                        <span class="text-label-md font-label-md text-[#8E8E93] font-medium">Categoría</span>
+                        <span class="text-label-sm font-label-sm text-[#34C759] font-semibold">Editar</span>
+                    </div>
+                    <div class="flex items-center space-x-3 overflow-x-auto px-margin no-scrollbar py-1">
+                        <!-- Comida & Bebida (Active selected state) -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-amber-500/25 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-sm relative">
+                                <span class="material-symbols-outlined text-[28px]"
+                                    style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                <div
+                                    class="absolute -top-1 -right-1 w-4 h-4 bg-[#34C759] rounded-full flex items-center justify-center text-white ring-2 ring-[#1C1C1E]">
+                                    <span class="material-symbols-outlined text-[12px] font-bold">check</span>
+                                </div>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-semibold text-white">Comida</span>
+                        </button>
+                        <!-- Supermercado -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform opacity-90 hover:opacity-100"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-[#2C2C2E] border border-white/5 flex items-center justify-center text-[#34C759] shadow-sm">
+                                <span class="material-symbols-outlined text-[26px]"
+                                    style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-medium text-[#8E8E93]">Súper</span>
+                        </button>
+                        <!-- Transporte -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform opacity-90 hover:opacity-100"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-[#2C2C2E] border border-white/5 flex items-center justify-center text-[#0A84FF] shadow-sm">
+                                <span class="material-symbols-outlined text-[26px]"
+                                    style="font-variation-settings: 'FILL' 1;">directions_subway</span>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-medium text-[#8E8E93]">Viajes</span>
+                        </button>
+                        <!-- Compras -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform opacity-90 hover:opacity-100"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-[#2C2C2E] border border-white/5 flex items-center justify-center text-[#FF375F] shadow-sm">
+                                <span class="material-symbols-outlined text-[26px]"
+                                    style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-medium text-[#8E8E93]">Compras</span>
+                        </button>
+                        <!-- Salud -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform opacity-90 hover:opacity-100"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-[#2C2C2E] border border-white/5 flex items-center justify-center text-[#30D158] shadow-sm">
+                                <span class="material-symbols-outlined text-[26px]"
+                                    style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-medium text-[#8E8E93]">Salud</span>
+                        </button>
+                        <!-- Hogar -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform opacity-90 hover:opacity-100"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-[#2C2C2E] border border-white/5 flex items-center justify-center text-[#BF5AF2] shadow-sm">
+                                <span class="material-symbols-outlined text-[26px]"
+                                    style="font-variation-settings: 'FILL' 1;">home</span>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-medium text-[#8E8E93]">Hogar</span>
+                        </button>
+                        <!-- Más -->
+                        <button
+                            class="flex flex-col items-center space-y-1.5 flex-shrink-0 group active:scale-95 transition-transform opacity-90 hover:opacity-100"
+                            type="button">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-[#2C2C2E] border border-white/5 flex items-center justify-center text-[#8E8E93] shadow-sm">
+                                <span class="material-symbols-outlined text-[26px]">add_circle</span>
+                            </div>
+                            <span class="text-label-sm font-label-sm font-medium text-[#8E8E93]">+ Más</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- 4. Inset Grouped Form Card (Apple Settings Style) -->
+                <div class="px-margin py-2">
+                    <div class="bg-[#2C2C2E] rounded-2xl overflow-hidden shadow-sm flex flex-col border border-white/5">
+                        <!-- Row 1: Concepto -->
+                        <div class="flex items-center justify-between px-4 py-3.5 bg-[#2C2C2E]">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-[22px] text-[#8E8E93]">edit_note</span>
+                                <span class="font-body-md text-body-md text-white font-medium">Concepto</span>
+                            </div>
+                            <input
+                                class="text-right font-body-md text-body-md text-white font-semibold bg-transparent outline-none placeholder:text-[#8E8E93]/50 max-w-[180px]"
+                                placeholder="¿En qué gastaste?" type="text" value="Cena con amigos" />
+                        </div>
+                        <div class="h-[1px] bg-[#38383A] ml-11"></div>
+                        <!-- Row 2: Fecha -->
+                        <div class="flex items-center justify-between px-4 py-3.5 bg-[#2C2C2E]">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-[22px] text-[#0A84FF]">calendar_today</span>
+                                <span class="font-body-md text-body-md text-white font-medium">Fecha</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[#8E8E93]">
+                                <span class="font-body-md text-body-md text-white font-semibold">Hoy, 20:30</span>
+                                <span
+                                    class="material-symbols-outlined text-[18px] text-[#8E8E93]/60">chevron_right</span>
+                            </div>
+                        </div>
+                        <div class="h-[1px] bg-[#38383A] ml-11"></div>
+                        <!-- Row 3: Método de pago -->
+                        <div class="flex items-center justify-between px-4 py-3.5 bg-[#2C2C2E]">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-[22px] text-white">credit_card</span>
+                                <span class="font-body-md text-body-md text-white font-medium">Método</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-4 rounded bg-white flex items-center justify-center">
+                                    <span class="text-[8px] font-bold text-black tracking-tighter">APPLE</span>
+                                </div>
+                                <span class="font-body-md text-body-md text-white font-semibold">•••• 4092</span>
+                                <span
+                                    class="material-symbols-outlined text-[18px] text-[#8E8E93]/60">chevron_right</span>
+                            </div>
+                        </div>
+                        <div class="h-[1px] bg-[#38383A] ml-11"></div>
+                        <!-- Row 4: Nota -->
+                        <div class="flex items-center justify-between px-4 py-3.5 bg-[#2C2C2E]">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-[22px] text-[#8E8E93]">notes</span>
+                                <span class="font-body-md text-body-md text-white font-medium">Nota</span>
+                            </div>
+                            <input
+                                class="text-right font-body-md text-body-md text-white bg-transparent outline-none placeholder:text-[#8E8E93]/50 max-w-[150px]"
+                                placeholder="Opcional" type="text" />
+                        </div>
+                    </div>
+                </div>
+                <!-- 5. Native iOS Numeric Keypad (Tactile 3x4 Grid) -->
+                <div class="px-margin pt-3 pb-4">
+                    <div class="grid grid-cols-3 gap-2 max-w-sm mx-auto">
+                        <!-- Digit 1 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('1')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">1</span>
+                        </button>
+                        <!-- Digit 2 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('2')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">2</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">ABC</span>
+                        </button>
+                        <!-- Digit 3 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('3')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">3</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">DEF</span>
+                        </button>
+                        <!-- Digit 4 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('4')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">4</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">GHI</span>
+                        </button>
+                        <!-- Digit 5 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('5')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">5</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">JKL</span>
+                        </button>
+                        <!-- Digit 6 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('6')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">6</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">MNO</span>
+                        </button>
+                        <!-- Digit 7 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('7')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">7</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">PQRS</span>
+                        </button>
+                        <!-- Digit 8 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('8')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">8</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">TUV</span>
+                        </button>
+                        <!-- Digit 9 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex flex-col items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('9')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">9</span>
+                            <span class="text-[9px] font-semibold text-[#8E8E93] -mt-1 tracking-widest">WXYZ</span>
+                        </button>
+                        <!-- Decimal Separator -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey(',')">
+                            <span class="font-headline-md text-headline-md text-white font-bold">,</span>
+                        </button>
+                        <!-- Digit 0 -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex items-center justify-center shadow-sm border border-white/5"
+                            onclick="pressKey('0')">
+                            <span class="font-headline-md text-headline-md text-white font-semibold">0</span>
+                        </button>
+                        <!-- Backspace Action -->
+                        <button
+                            class="h-13 py-3 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] active:bg-[#48484A] active:scale-95 transition-all flex items-center justify-center shadow-sm text-white border border-white/5"
+                            onclick="backspace()">
+                            <span class="material-symbols-outlined text-[26px]">backspace</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- 6. Big Full-Width Primary Action Button -->
+                <div class="px-margin pt-2">
+                    <button
+                        class="w-full h-14 bg-[#34C759] text-white font-body-lg-bold text-body-lg-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#34C759]/20"
+                        id="btn-save-main" type="button">
+                        <span class="material-symbols-outlined text-[22px]">check_circle</span>
+                        <span id="btn-label-save">Guardar Gasto</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script>
+            let currentVal = '45,50';
+
+            function updateDisplay() {
+                const el = document.getElementById('amount-display');
+                if (el) {
+                    el.textContent = currentVal || '0,00';
+                }
+            }
+
+            function pressKey(key) {
+                if (currentVal === '0,00' || currentVal === '0') {
+                    currentVal = key === ',' ? '0,' : key;
+                } else {
+                    if (key === ',' && currentVal.includes(',')) return;
+                    if (currentVal.length < 9) {
+                        currentVal += key;
+                    }
+                }
+                updateDisplay();
+            }
+
+            function backspace() {
+                if (currentVal.length > 1) {
+                    currentVal = currentVal.slice(0, -1);
+                } else {
+                    currentVal = '0';
+                }
+                updateDisplay();
+            }
+
+            function setTxType(type) {
+                const tGasto = document.getElementById('tab-gasto');
+                const tIngreso = document.getElementById('tab-ingreso');
+                const tTransfer = document.getElementById('tab-transfer');
+                const btnSave = document.getElementById('btn-save-main');
+                const btnLabel = document.getElementById('btn-label-save');
+
+                [tGasto, tIngreso, tTransfer].forEach(b => {
+                    b.className = 'flex-1 py-1.5 text-center text-label-md font-label-md font-medium text-[#8E8E93] rounded-xl transition-all duration-200';
+                });
+
+                if (type === 'gasto') {
+                    tGasto.className = 'flex-1 py-1.5 text-center text-label-md font-label-md font-semibold rounded-xl transition-all duration-200 bg-[#3A3A3C] text-white shadow-sm';
+                    btnSave.className = 'w-full h-14 bg-[#34C759] text-white font-body-lg-bold text-body-lg-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#34C759]/20';
+                    btnLabel.textContent = 'Guardar Gasto';
+                } else if (type === 'ingreso') {
+                    tIngreso.className = 'flex-1 py-1.5 text-center text-label-md font-label-md font-semibold rounded-xl transition-all duration-200 bg-[#3A3A3C] text-[#34C759] shadow-sm';
+                    btnSave.className = 'w-full h-14 bg-[#34C759] text-white font-body-lg-bold text-body-lg-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#34C759]/20';
+                    btnLabel.textContent = 'Registrar Ingreso';
+                } else {
+                    tTransfer.className = 'flex-1 py-1.5 text-center text-label-md font-label-md font-semibold rounded-xl transition-all duration-200 bg-[#3A3A3C] text-[#0A84FF] shadow-sm';
+                    btnSave.className = 'w-full h-14 bg-[#0A84FF] text-white font-body-lg-bold text-body-lg-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#0A84FF]/20';
+                    btnLabel.textContent = 'Confirmar Transferencia';
+                }
+            }
+        </script>
+    </main>
+    <div class="fixed bottom-0 inset-x-0 pb-safe pointer-events-none flex justify-center pb-2">
+        <div class="w-32 h-1 bg-[#48484A] rounded-full"></div>
+    </div>
+</body>
+
+</html>

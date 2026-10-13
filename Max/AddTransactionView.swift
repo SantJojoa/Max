@@ -7,7 +7,7 @@ struct AddTransactionView: View {
 
     var transactionToEdit: Transaction?
 
-    @State private var amountText: String = ""
+    @State private var amount: Double = 0
     @State private var type: TransactionType = .expense
     @State private var category: String = ""
     @State private var date: Date = .now
@@ -15,16 +15,15 @@ struct AddTransactionView: View {
 
     @Query private var budgets: [Budget]
     @Query private var allTransactions: [Transaction]
-
-    private let expenseCategories = ["Comida", "Transporte", "Vivienda", "Entretenimiento", "Salud", "Otros"]
-    private let incomeCategories = ["Salario", "Freelance", "Regalo", "Otros"]
+    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
 
     private var currentCategories: [String] {
-        type == .expense ? expenseCategories : incomeCategories
+        let scope: CategoryScope = type == .expense ? .expense : .income
+        return allCategories.filter { $0.scope == scope }.map { $0.name }
     }
 
     private var isValid: Bool {
-        guard let amount = Double(amountText), amount > 0 else { return false }
+        guard amount > 0 else { return false }
         return !category.isEmpty
     }
 
@@ -43,8 +42,7 @@ struct AddTransactionView: View {
                 }
 
                 Section("Detalles") {
-                    TextField("Monto", text: $amountText)
-                        .keyboardType(.decimalPad)
+                    AmountField(value: $amount)
 
                     Picker("Categoría", selection: $category) {
                         Text("Selecciona").tag("")
@@ -58,6 +56,9 @@ struct AddTransactionView: View {
                     TextField("Nota (opcional)", text: $note)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar transacción" : "Nueva transacción")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -66,13 +67,12 @@ struct AddTransactionView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") { save() }
                         .disabled(!isValid)
+                        .fontWeight(.semibold)
                 }
             }
             .onAppear {
                 if let transaction = transactionToEdit {
-                    amountText = transaction.amount == transaction.amount.rounded()
-                        ? String(Int(transaction.amount))
-                        : String(transaction.amount)
+                    amount = transaction.amount
                     type = transaction.type
                     category = transaction.category
                     date = transaction.date
@@ -88,14 +88,14 @@ struct AddTransactionView: View {
     }
 
     private func save() {
-        guard let amount = Double(amountText) else { return }
-
         if let transaction = transactionToEdit {
             transaction.amount = amount
             transaction.type = type
             transaction.category = category
             transaction.date = date
             transaction.note = note
+            transaction.updatedAt = .now
+            transaction.needsSync = true
         } else {
             let transaction = Transaction(amount: amount, type: type, category: category, date: date, note: note)
             modelContext.insert(transaction)

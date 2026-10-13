@@ -14,11 +14,20 @@ final class Transaction {
     var date: Date
     var note: String
 
+    var remoteID: UUID?
+    var updatedAt: Date
+    var isDeleted: Bool
+    var needsSync: Bool
+
     init(amount: Double, type: TransactionType, category: String, date: Date = .now, note: String = "") {
         self.amount = amount
         self.type = type
         self.category = category
         self.date = date
         self.note = note
+        self.remoteID = nil
+        self.updatedAt = .now
+        self.isDeleted = false
+        self.needsSync = true
     }
 }

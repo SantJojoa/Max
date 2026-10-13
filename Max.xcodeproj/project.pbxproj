@@ -6,31 +6,122 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		355344623044AFE600EC8E3B /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 355344613044AFE500EC8E3B /* WidgetKit.framework */; };
+		355344643044AFE600EC8E3B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 355344633044AFE600EC8E3B /* SwiftUI.framework */; };
+		355344733044AFE600EC8E3B /* MaxWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 355344603044AFE500EC8E3B /* MaxWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3556321A3043E96400466E0C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 355632193043E96400466E0C /* Supabase */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		355344713044AFE600EC8E3B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 35B7EDE63043859200BCB5E7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3553445F3044AFE500EC8E3B;
+			remoteInfo = MaxWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		355344783044AFE600EC8E3B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				355344733044AFE600EC8E3B /* MaxWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		355344603044AFE500EC8E3B /* MaxWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MaxWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		355344613044AFE500EC8E3B /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		355344633044AFE600EC8E3B /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		3553447A304524F400EC8E3B /* MaxWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MaxWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		35B7EDEE3043859300BCB5E7 /* Max.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Max.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		355344743044AFE600EC8E3B /* Exceptions for "MaxWidgets" folder in "MaxWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3553445F3044AFE500EC8E3B /* MaxWidgetsExtension */;
+		};
+		357BDD1D30452E3700E74C7D /* Exceptions for "MaxWidgets" folder in "Max" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				QuickAddIntent.swift,
+			);
+			target = 35B7EDED3043859300BCB5E7 /* Max */;
+		};
+		357BDD3D3045347C00E74C7D /* Exceptions for "Max" folder in "MaxWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppCurrency.swift,
+				CurrencyFormat.swift,
+				CurrencySettings.swift,
+			);
+			target = 3553445F3044AFE500EC8E3B /* MaxWidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		355344653044AFE600EC8E3B /* MaxWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				357BDD1D30452E3700E74C7D /* Exceptions for "MaxWidgets" folder in "Max" target */,
+				355344743044AFE600EC8E3B /* Exceptions for "MaxWidgets" folder in "MaxWidgetsExtension" target */,
+			);
+			path = MaxWidgets;
+			sourceTree = "<group>";
+		};
 		35B7EDF03043859300BCB5E7 /* Max */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				357BDD3D3045347C00E74C7D /* Exceptions for "Max" folder in "MaxWidgetsExtension" target */,
+			);
 			path = Max;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3553445D3044AFE500EC8E3B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				355344643044AFE600EC8E3B /* SwiftUI.framework in Frameworks */,
+				355344623044AFE600EC8E3B /* WidgetKit.framework in Frameworks */,
+			);
+		};
 		35B7EDEB3043859300BCB5E7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				3556321A3043E96400466E0C /* Supabase in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		355632183043E96400466E0C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				355344613044AFE500EC8E3B /* WidgetKit.framework */,
+				355344633044AFE600EC8E3B /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		35B7EDE53043859200BCB5E7 = {
 			isa = PBXGroup;
 			children = (
+				3553447A304524F400EC8E3B /* MaxWidgetsExtension.entitlements */,
 				35B7EDF03043859300BCB5E7 /* Max */,
+				355344653044AFE600EC8E3B /* MaxWidgets */,
+				355632183043E96400466E0C /* Frameworks */,
 				35B7EDEF3043859300BCB5E7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				35B7EDEE3043859300BCB5E7 /* Max.app */,
+				355344603044AFE500EC8E3B /* MaxWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -46,6 +138,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3553445F3044AFE500EC8E3B /* MaxWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 355344753044AFE600EC8E3B /* Build configuration list for PBXNativeTarget "MaxWidgetsExtension" */;
+			buildPhases = (
+				3553445C3044AFE500EC8E3B /* Sources */,
+				3553445D3044AFE500EC8E3B /* Frameworks */,
+				3553445E3044AFE500EC8E3B /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				355344653044AFE600EC8E3B /* MaxWidgets */,
+			);
+			name = MaxWidgetsExtension;
+			productName = MaxWidgetsExtension;
+			productReference = 355344603044AFE500EC8E3B /* MaxWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		35B7EDED3043859300BCB5E7 /* Max */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 35B7EDF93043859300BCB5E7 /* Build configuration list for PBXNativeTarget "Max" */;
@@ -53,13 +163,20 @@
 				35B7EDEA3043859300BCB5E7 /* Sources */,
 				35B7EDEB3043859300BCB5E7 /* Frameworks */,
 				35B7EDEC3043859300BCB5E7 /* Resources */,
+				355344783044AFE600EC8E3B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				355344723044AFE600EC8E3B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				35B7EDF03043859300BCB5E7 /* Max */,
 			);
 			name = Max;
+			packageProductDependencies = (
+				355632193043E96400466E0C /* Supabase */,
+			);
 			productName = Max;
 			productReference = 35B7EDEE3043859300BCB5E7 /* Max.app */;
 			productType = "com.apple.product-type.application";
@@ -74,6 +191,9 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					3553445F3044AFE500EC8E3B = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					35B7EDED3043859300BCB5E7 = {
 						CreatedOnToolsVersion = 27.0;
 					};
@@ -88,17 +208,26 @@
 			);
 			mainGroup = 35B7EDE53043859200BCB5E7;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				355632153043E8A300466E0C /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 35B7EDEF3043859300BCB5E7 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				35B7EDED3043859300BCB5E7 /* Max */,
+				3553445F3044AFE500EC8E3B /* MaxWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3553445E3044AFE500EC8E3B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		35B7EDEC3043859300BCB5E7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -107,6 +236,11 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3553445C3044AFE500EC8E3B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		35B7EDEA3043859300BCB5E7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -114,7 +248,79 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		355344723044AFE600EC8E3B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3553445F3044AFE500EC8E3B /* MaxWidgetsExtension */;
+			targetProxy = 355344713044AFE600EC8E3B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		355344763044AFE600EC8E3B /* Debug configuration for PBXNativeTarget "MaxWidgetsExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MaxWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4BRM6543U6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MaxWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MaxWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.santiagojojoa.Max.MaxWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		355344773044AFE600EC8E3B /* Release configuration for PBXNativeTarget "MaxWidgetsExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MaxWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4BRM6543U6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MaxWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MaxWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.santiagojojoa.Max.MaxWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		35B7EDF73043859300BCB5E7 /* Debug configuration for PBXProject "Max" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -239,10 +445,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Max/Max.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4BRM6543U6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Usamos Face ID para proteger el acceso a tus datos financieros.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -255,6 +464,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.santiagojojoa.Max;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -270,10 +480,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Max/Max.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4BRM6543U6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Usamos Face ID para proteger el acceso a tus datos financieros.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -286,6 +499,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.santiagojojoa.Max;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -299,6 +513,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		355344753044AFE600EC8E3B /* Build configuration list for PBXNativeTarget "MaxWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				355344763044AFE600EC8E3B /* Debug configuration for PBXNativeTarget "MaxWidgetsExtension" */,
+				355344773044AFE600EC8E3B /* Release configuration for PBXNativeTarget "MaxWidgetsExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		35B7EDE93043859200BCB5E7 /* Build configuration list for PBXProject "Max" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -316,6 +538,27 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		355632153043E8A300466E0C /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+			traits = (
+			);
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		355632193043E96400466E0C /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 355632153043E8A300466E0C /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 35B7EDE63043859200BCB5E7 /* Project object */;
 	validationLevel = 1;

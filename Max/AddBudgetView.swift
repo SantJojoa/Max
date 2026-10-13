@@ -8,15 +8,18 @@ struct AddBudgetView: View {
     var budgetToEdit: Budget?
 
     @State private var category: String = ""
-    @State private var limitText: String = ""
+    @State private var limit: Double = 0
 
-    private let categories = ["Comida", "Transporte", "Vivienda", "Entretenimiento", "Salud", "Otros"]
+    @Query(filter: #Predicate<Category> { !$0.isDeleted }, sort: \Category.name) private var allCategories: [Category]
+    private var categories: [String] {
+        allCategories.filter { $0.scope == .expense }.map { $0.name }
+    }
 
     private var currentMonth: Int { Calendar.current.component(.month, from: .now) }
     private var currentYear: Int { Calendar.current.component(.year, from: .now) }
 
     private var isValid: Bool {
-        guard let limit = Double(limitText), limit > 0 else { return false }
+        guard limit > 0 else { return false }
         return !category.isEmpty
     }
 
@@ -32,9 +35,11 @@ struct AddBudgetView: View {
                     }
                 }
 
-                TextField("Límite mensual", text: $limitText)
-                    .keyboardType(.decimalPad)
+                AmountField(placeholder: "Límite mensual", value: $limit)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar presupuesto" : "Nuevo presupuesto")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -43,25 +48,24 @@ struct AddBudgetView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") { save() }
                         .disabled(!isValid)
+                        .fontWeight(.semibold)
                 }
             }
             .onAppear {
                 if let budget = budgetToEdit {
                     category = budget.category
-                    limitText = budget.limitAmount == budget.limitAmount.rounded()
-                        ? String(Int(budget.limitAmount))
-                        : String(budget.limitAmount)
+                    limit = budget.limitAmount
                 }
             }
         }
     }
 
     private func save() {
-        guard let limit = Double(limitText) else { return }
-
         if let budget = budgetToEdit {
             budget.category = category
             budget.limitAmount = limit
+            budget.updatedAt = .now
+            budget.needsSync = true
         } else {
             let budget = Budget(category: category, limitAmount: limit, month: currentMonth, year: currentYear)
             modelContext.insert(budget)

@@ -1,10 +1,3 @@
-//
-//  CardDetailView.swift
-//  Max
-//
-//  Created by Santiago Jojoa on 29/08/26.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -17,12 +10,13 @@ struct CardDetailView: View {
     @State private var editingTransaction: CardTransaction?
 
     private var sortedTransactions: [CardTransaction] {
-        card.transactions.sorted { $0.date > $1.date }
+        card.transactions.filter { !$0.isDeleted }.sorted { $0.date > $1.date }
     }
 
     private var usedCupo: Double {
-        let purchases = card.transactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
-        let payments = card.transactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
+        let activeTransactions = card.transactions.filter { !$0.isDeleted }
+        let purchases = activeTransactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
+        let payments = activeTransactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
         return purchases - payments
     }
 
@@ -35,62 +29,79 @@ struct CardDetailView: View {
         return min(max(usedCupo / card.creditLimit, 0), 1)
     }
 
+    private var progressColor: Color {
+        if usageRatio >= 0.9 { return .appExpense }
+        if usageRatio >= 0.7 { return .orange }
+        return .appAccent
+    }
+
     var body: some View {
         List {
-            Section("Cupo") {
-                HStack {
-                    Text("Usado")
-                    Spacer()
-                    Text(usedCupo, format: .currency(code: "COP"))
-                        .foregroundStyle(.red)
-                }
-                HStack {
-                    Text("Disponible")
-                    Spacer()
-                    Text(availableCupo, format: .currency(code: "COP"))
-                        .foregroundStyle(.green)
-                }
-                ProgressView(value: usageRatio)
-                    .tint(usageRatio >= 0.9 ? .red : .blue)
+            Section {
+                VStack(spacing: 16) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Usado")
+                                .font(.caption)
+                                .foregroundStyle(Color.appTextSecondary)
+                            Text(CurrencyFormat.string(for: usedCupo))
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(Color.appExpense)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Disponible")
+                                .font(.caption)
+                                .foregroundStyle(Color.appTextSecondary)
+                            Text(CurrencyFormat.string(for: availableCupo))
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(Color.appIncome)
+                        }
+                    }
 
-                HStack {
-                    Text("Día de corte")
-                    Spacer()
-                    Text("\(card.closingDay)")
-                        .foregroundStyle(.secondary)
+                    ProgressView(value: usageRatio)
+                        .tint(progressColor)
                 }
-                HStack {
-                    Text("Tasa de interés mensual")
-                    Spacer()
-                    (Text(card.monthlyInterestRate, format: .number.precision(.fractionLength(1))) + Text("%"))
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("Cuota de manejo")
-                    Spacer()
-                    Text(card.managementFee, format: .currency(code: "COP"))
-                        .foregroundStyle(.secondary)
-                }
+                .padding(.vertical, 8)
             }
+            .listRowBackground(Color.appCardBackground)
+
+            Section("Detalles") {
+                detailRow(title: "Día de corte", value: "\(card.closingDay)")
+                detailRow(title: "Tasa de interés mensual", value: card.monthlyInterestRate.formatted(.number.precision(.fractionLength(1))) + "%")
+                detailRow(title: "Cuota de manejo", value: CurrencyFormat.string(for: card.managementFee))
+            }
+            .listRowBackground(Color.appCardBackground)
 
             Section("Movimientos") {
                 if sortedTransactions.isEmpty {
                     Text("Todavía no hay movimientos en esta tarjeta.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.appTextSecondary)
                 } else {
                     ForEach(sortedTransactions) { transaction in
-                        HStack {
-                            VStack(alignment: .leading) {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill((transaction.type == .payment ? Color.appIncome : Color.appExpense).opacity(0.15))
+                                    .frame(width: 36, height: 36)
+                                Image(systemName: transaction.type == .payment ? "arrow.down" : "cart.fill")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(transaction.type == .payment ? Color.appIncome : Color.appExpense)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text(transaction.type == .purchase ? transaction.category : "Pago")
                                     .font(.headline)
                                 Text(transaction.date, format: .dateTime.day().month().year())
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.appTextSecondary)
                             }
                             Spacer()
-                            Text(transaction.amount, format: .currency(code: "COP"))
-                                .foregroundStyle(transaction.type == .payment ? .green : .red)
+                            Text(CurrencyFormat.string(for: transaction.amount))
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(transaction.type == .payment ? Color.appIncome : Color.appExpense)
                         }
+                        .padding(.vertical, 4)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             editingTransaction = transaction
@@ -99,8 +110,12 @@ struct CardDetailView: View {
                     .onDelete(perform: deleteTransactions)
                 }
             }
+            .listRowBackground(Color.appCardBackground)
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.appBackground)
         .navigationTitle(card.name)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
@@ -115,7 +130,9 @@ struct CardDetailView: View {
                         Label("Registrar pago", systemImage: "creditcard.and.123")
                     }
                 } label: {
-                    Label("Agregar", systemImage: "plus")
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color.appAccent)
                 }
             }
         }
@@ -130,9 +147,22 @@ struct CardDetailView: View {
         }
     }
 
+    @ViewBuilder
+    private func detailRow(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value)
+                .foregroundStyle(Color.appTextSecondary)
+        }
+    }
+
     private func deleteTransactions(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(sortedTransactions[index])
+            let transaction = sortedTransactions[index]
+            transaction.isDeleted = true
+            transaction.updatedAt = .now
+            transaction.needsSync = true
         }
     }
 }

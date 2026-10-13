@@ -1,10 +1,3 @@
-//
-//  CreditCard.swift
-//  Max
-//
-//  Created by Santiago Jojoa on 29/08/26.
-//
-
 import Foundation
 import SwiftData
 
@@ -12,12 +5,17 @@ import SwiftData
 final class CreditCard {
     var name: String
     var creditLimit: Double
-    var closingDay: Int              // día de corte, 1 a 31
-    var monthlyInterestRate: Double  // tasa de interés mensual, en % (ej: 2.5)
-    var managementFee: Double        // cuota de manejo
+    var closingDay: Int
+    var monthlyInterestRate: Double
+    var managementFee: Double
 
     @Relationship(deleteRule: .cascade, inverse: \CardTransaction.card)
     var transactions: [CardTransaction] = []
+
+    var remoteID: UUID?
+    var updatedAt: Date
+    var isDeleted: Bool
+    var needsSync: Bool
 
     init(name: String, creditLimit: Double, closingDay: Int, monthlyInterestRate: Double, managementFee: Double) {
         self.name = name
@@ -25,5 +23,9 @@ final class CreditCard {
         self.closingDay = closingDay
         self.monthlyInterestRate = monthlyInterestRate
         self.managementFee = managementFee
+        self.remoteID = nil
+        self.updatedAt = .now
+        self.isDeleted = false
+        self.needsSync = true
     }
 }

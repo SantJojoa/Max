@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
 
+/// Contenido de la sección "Presupuestos" dentro de `PlanningView`.
+/// No es dueño de su propio `List`/`NavigationStack`: sus filas se insertan
+/// directamente en la `Section` del `List` que lo contiene.
 struct BudgetsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var budgets: [Budget]
-    @Query private var transactions: [Transaction]
+    @Query(filter: #Predicate<Budget> { !$0.isDeleted }) private var budgets: [Budget]
+    @Query(filter: #Predicate<Transaction> { !$0.isDeleted }) private var transactions: [Transaction]
     @State private var showingAddBudget = false
     @State private var editingBudget: Budget?
 
@@ -27,47 +30,68 @@ struct BudgetsView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                if currentBudgets.isEmpty {
-                    ContentUnavailableView(
-                        "Sin presupuestos este mes",
-                        systemImage: "chart.pie",
-                        description: Text("Toca + para crear tu primer presupuesto mensual.")
-                    )
-                } else {
-                    ForEach(currentBudgets) { budget in
-                        BudgetRow(budget: budget, spent: spent(for: budget.category))
-                            .contentShape(Rectangle())
-                            .onTapGesture {
+        Group {
+            if currentBudgets.isEmpty {
+                emptyRow
+            } else {
+                ForEach(currentBudgets) { budget in
+                    BudgetRow(budget: budget, spent: spent(for: budget.category))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .swipeActions(edge: .leading) {
+                            Button {
                                 editingBudget = budget
+                            } label: {
+                                Label("Editar", systemImage: "pencil")
                             }
-                    }
-                    .onDelete(perform: deleteBudgets)
+                            .tint(.blue)
+                        }
                 }
+                .onDelete(perform: deleteBudgets)
             }
-            .navigationTitle("Presupuestos")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingAddBudget = true
-                    } label: {
-                        Label("Agregar", systemImage: "plus")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingAddBudget) {
-                AddBudgetView()
-            }
-            .sheet(item: $editingBudget) { budget in
-                AddBudgetView(budgetToEdit: budget)
-            }
+
+            addRow
         }
+        .sheet(isPresented: $showingAddBudget) {
+            AddBudgetView()
+        }
+        .sheet(item: $editingBudget) { budget in
+            AddBudgetView(budgetToEdit: budget)
+        }
+    }
+
+    private var emptyRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Sin presupuestos este mes")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.appTextPrimary)
+            Text("Toca \"Nuevo presupuesto\" para crear el primero.")
+                .font(.caption)
+                .foregroundStyle(Color.appTextSecondary)
+        }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+
+    private var addRow: some View {
+        Button {
+            showingAddBudget = true
+        } label: {
+            Label("Nuevo presupuesto", systemImage: "plus.circle.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.appAccent)
+        }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 
     private func deleteBudgets(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(currentBudgets[index])
+            let budget = currentBudgets[index]
+            budget.isDeleted = true
+            budget.updatedAt = .now
+            budget.needsSync = true
         }
     }
 }
@@ -82,30 +106,36 @@ private struct BudgetRow: View {
     }
 
     private var progressColor: Color {
-        let ratio = spent / budget.limitAmount
-        if ratio >= 1.0 { return .red }
+        let ratio = budget.limitAmount > 0 ? spent / budget.limitAmount : 0
+        if ratio >= 1.0 { return .appExpense }
         if ratio >= 0.8 { return .orange }
-        return .green
+        return .appAccent
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(budget.category)
                     .font(.headline)
                 Spacer()
-                Text("\(spent, format: .currency(code: "COP")) / \(budget.limitAmount, format: .currency(code: "COP"))")
+                Text("\(CurrencyFormat.string(for: spent)) / \(CurrencyFormat.string(for: budget.limitAmount))")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.appTextSecondary)
             }
             ProgressView(value: progress)
                 .tint(progressColor)
         }
-        .padding(.vertical, 4)
+        .floatingCardStyle()
     }
 }
 
 #Preview {
-    BudgetsView()
-        .modelContainer(for: [Transaction.self, Budget.self], inMemory: true)
+    NavigationStack {
+        List {
+            Section("Presupuestos") {
+                BudgetsView()
+            }
+        }
+    }
+    .modelContainer(for: [Transaction.self, Budget.self], inMemory: true)
 }

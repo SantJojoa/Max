@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        name="viewport" />
+    <meta content="mobile_tab" name="shell-type" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style>
+        @layer base {
+
+            html,
+            body {
+                width: 100vw;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                overscroll-behavior: none;
+                background-color: #000000;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                color: #ffffff;
+            }
+
+            .pb-safe {
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+
+            .pt-safe {
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+
+            main>:first-child {
+                margin-top: 0 !important;
+            }
+
+            main>:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-fixed": "#001a41", "surface-container-high": "#2c2c2e", "background": "#000000", "on-primary-fixed": "#002107", "on-surface": "#ffffff", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#00531c", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb4aa", "primary-fixed-dim": "#53e16f", "on-surface-variant": "#8e8e93", "surface-variant": "#2c2c2e", "secondary-fixed": "#d8e2ff", "on-background": "#ffffff", "on-tertiary-fixed": "#410001", "on-secondary-container": "#fefcff", "on-tertiary-fixed-variant": "#930005", "inverse-primary": "#53e16f", "surface-bright": "#1c1c1e", "surface-container-highest": "#3a3a3c", "primary-container": "#34c759", "surface-container": "#1c1c1e", "on-primary": "#ffffff", "on-secondary-fixed-variant": "#004493", "surface-tint": "#34c759", "tertiary-fixed": "#ffdad5", "surface-container-lowest": "#000000", "outline": "#636366", "primary-fixed": "#72fe88", "error": "#ff453a", "secondary": "#0a84ff", "on-error-container": "#ffdad6", "surface-container-low": "#161618", "tertiary": "#ff453a", "on-error": "#ffffff", "outline-variant": "#38383a", "inverse-on-surface": "#1c1c1e", "secondary-container": "#0a84ff", "primary": "#30d158", "inverse-surface": "#ffffff", "on-primary-container": "#003911", "tertiary-container": "#ff453a", "surface": "#000000", "secondary-fixed-dim": "#adc6ff", "on-tertiary-container": "#890005", "surface-dim": "#000000", "error-container": "#3a1315" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "gutter": "1rem", "space-xl": "1.5rem", "space-lg": "1.25rem", "space-sm": "0.5rem", "margin": "1rem", "space-xs": "0.25rem", "space-md": "1rem" }, fontFamily: { "headline-xl": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "numeric-metric": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "body-lg-bold": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"] }, fontSize: { "headline-xl": ["34px", { "lineHeight": "41px", "letterSpacing": "0.37px", "fontWeight": "700" }], "body-md": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.23px", "fontWeight": "400" }], "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0px", "fontWeight": "400" }], "numeric-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.5px", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "0.34px", "fontWeight": "700" }], "body-lg": ["17px", { "lineHeight": "22px", "letterSpacing": "-0.43px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.26px", "fontWeight": "600" }], "headline-xl-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "0.35px", "fontWeight": "700" }], "headline-sm": ["20px", { "lineHeight": "25px", "letterSpacing": "-0.45px", "fontWeight": "600" }], "body-lg-bold": ["17px", { "lineHeight": "22px", "letterSpacing": "-0.43px", "fontWeight": "600" }], "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.08px", "fontWeight": "500" }] } } } };</script>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+            background-color: #000000;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-black text-white flex flex-col min-h-screen antialiased selection:bg-primary-container selection:text-white">
+    <header class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl pt-safe border-b border-white/10">
+        <div class="h-28 px-margin flex flex-col justify-between pb-space-sm">
+            <div class="relative flex items-center justify-between w-full h-8">
+                <div class="flex items-center text-white text-label-md font-label-md"><span
+                        class="font-semibold">9:41</span></div>
+                <div
+                    class="absolute left-1/2 -translate-x-1/2 top-0 h-7 w-28 bg-[#111111] border border-white/5 rounded-full flex items-center justify-end pr-2.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-[#1c1c1e]"></div>
+                </div>
+                <div class="flex items-center gap-1.5 text-white"><span
+                        class="material-symbols-outlined text-[15px]">signal_cellular_4_bar</span><span
+                        class="material-symbols-outlined text-[15px]">wifi</span><span
+                        class="material-symbols-outlined text-[18px]">battery_full</span></div>
+            </div>
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-space-sm"><img alt="Max Logo"
+                        class="h-8 w-auto object-contain brightness-110"
+                        src="https://lh3.googleusercontent.com/aida/AEtjO1VAo1NxLiDYxqixjSPP7pRJcE4KSJeAYNmGGv0Drko_7JPFG9qTXngE_-ilmhdfsRLK3z0JJoajf2LP66MxuxRVQ1o1jOkiEIwSMqKWxptXWBqn776fix9OaWjUtqTxiUrTlQUUSXZgQzEEr8bi_YAxCsIWUNR62F9kqji3ydBuIAUCo_f8CVs8VubqupjJnJZDbVucc5Q9onBWImO_vcl_z4ogHN520Xid6syExXQhfchzzLDPkmYvPxoH" />
+                    <h1 class="text-headline-sm font-headline-sm text-white font-semibold">Tarjetas</h1>
+                </div>
+                <div class="flex items-center gap-space-xs"><button
+                        class="w-11 h-11 flex items-center justify-center rounded-full text-[#8e8e93] hover:text-white transition-colors active:scale-95"><span
+                            class="material-symbols-outlined text-[22px]">calendar_today</span></button><button
+                        class="w-11 h-11 flex items-center justify-center rounded-full text-[#8e8e93] hover:text-white transition-colors active:scale-95"><span
+                            class="material-symbols-outlined text-[22px]">search</span></button><a
+                        class="w-11 h-11 flex items-center justify-center rounded-full transition-transform active:scale-95 ml-space-xs"
+                        data-path="perfil" href="#"><img alt="Profile"
+                            class="w-8 h-8 rounded-full object-cover ring-1 ring-white/20"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuACUmyEFrD_WY3M_yUG6Lmzc_XfarqExWzgEPCS7qPDjJQehNS7C0SMzzqhmJZroblop1o9okvdec70kKiyNoxWppbKaXIOslelePwUBfG5vGG-d8dazo6tAVYj4Kmf8_AQ9w_iyVkjEOdnc0u6SI4uZIwmkU5zjzN9CpBB2hDUI4-gITHdDh2Xe6rsUL14sdmdfG2ZBByqlYlHhlAifWw-OYfXoSnkfXIOV2wtKAZpqa9_qIjDZoekxw" /></a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="flex flex-col relative w-full pt-28 pb-32 bg-black min-h-screen">
+        <div class="flex flex-col w-full px-margin pb-10">
+            <!-- Top Navigation & Action -->
+            <div class="flex items-center justify-between pt-2 pb-space-sm">
+                <div class="flex flex-col">
+                    <span class="text-label-sm font-label-sm text-[#8e8e93] uppercase tracking-wider font-semibold">Mis
+                        Finanzas</span>
+                    <h2 class="text-headline-xl-mobile font-headline-xl-mobile text-white tracking-tight font-bold">
+                        Tarjetas</h2>
+                </div>
+                <button aria-label="Añadir tarjeta"
+                    class="w-10 h-10 rounded-full bg-[#1c1c1e] border border-white/10 text-white flex items-center justify-center transition-transform active:scale-90 shadow-sm"
+                    id="addCardBtn">
+                    <span class="material-symbols-outlined text-[22px]">add</span>
+                </button>
+            </div>
+            <!-- Wallet Stack Container -->
+            <div class="relative w-full mt-space-sm mb-6" id="walletStack" style="min-height: 380px;">
+                <!-- Card 3: Cuenta Ahorro Flexible (Back) -->
+                <div class="wallet-card absolute top-0 left-0 right-0 h-52 rounded-2xl p-space-lg text-white cursor-pointer select-none transition-all duration-500 ease-out shadow-lg border border-white/10"
+                    id="card-3" onclick="selectCard(3)"
+                    style="transform: translateY(0px) scale(0.92); z-index: 10; background: linear-gradient(135deg, #052613 0%, #0c3e21 55%, #155d34 100%);">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-label-sm font-label-sm text-primary-fixed/80 uppercase tracking-wider">Ahorro
+                                y Débito</p>
+                            <h3 class="text-body-lg-bold font-body-lg-bold text-white tracking-wide">Cuenta Flexible
+                            </h3>
+                        </div>
+                        <div class="flex items-center gap-1.5 opacity-90">
+                            <span class="material-symbols-outlined text-[20px] text-primary">contactless</span>
+                            <span class="text-label-sm font-label-sm tracking-widest text-primary font-bold">VISA</span>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-label-sm font-label-sm text-white/70">Saldo disponible</span>
+                            <div class="text-headline-md font-headline-md text-white font-bold tracking-tight">€
+                                8.500,00</div>
+                        </div>
+                        <div class="text-label-sm font-label-sm text-primary-fixed-dim font-mono tracking-widest">
+                            •••• 1109
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 2: Apple Pay Visa Platinum (Middle) -->
+                <div class="wallet-card absolute top-0 left-0 right-0 h-52 rounded-2xl p-space-lg text-white cursor-pointer select-none transition-all duration-500 ease-out shadow-lg border border-white/10"
+                    id="card-2" onclick="selectCard(2)"
+                    style="transform: translateY(38px) scale(0.96); z-index: 20; background: linear-gradient(135deg, #1f2330 0%, #282f42 40%, #3d344d 75%, #3f2e3a 100%);">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-label-sm font-label-sm text-[#8e8e93] uppercase tracking-wider">Apple Pay
+                                Virtual</p>
+                            <h3 class="text-body-lg-bold font-body-lg-bold text-white tracking-wide">Visa Platinum</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[20px] text-[#8e8e93]">contactless</span>
+                            <span class="material-symbols-outlined text-[22px] text-[#0a84ff]">credit_card</span>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-label-sm font-label-sm text-[#8e8e93]">Gastos del mes</span>
+                            <div class="text-headline-md font-headline-md text-white font-bold tracking-tight">€ 415,20
+                            </div>
+                        </div>
+                        <div class="text-label-sm font-label-sm text-[#8e8e93] font-mono tracking-widest">
+                            •••• 4092
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 1: Black Titanium Mastercard (Active / Foreground) -->
+                <div class="wallet-card absolute top-0 left-0 right-0 h-52 rounded-2xl p-space-lg text-white cursor-pointer select-none transition-all duration-500 ease-out shadow-2xl border border-white/15"
+                    id="card-1" onclick="selectCard(1)"
+                    style="transform: translateY(76px) scale(1); z-index: 30; background: linear-gradient(145deg, #141416 0%, #1e1e24 45%, #27282e 100%);">
+                    <!-- Metallic Shine Accent Overlay -->
+                    <div
+                        class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none">
+                    </div>
+                    <div class="relative z-10 flex items-start justify-between">
+                        <div class="flex flex-col">
+                            <span
+                                class="text-label-sm font-label-sm text-[#8e8e93] uppercase tracking-wider font-medium">Línea
+                                de Crédito Privada</span>
+                            <h3 class="text-body-lg-bold font-body-lg-bold text-white tracking-wide">Black Titanium</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[22px] text-amber-200">contactless</span>
+                            <!-- Realistic Mastercard Emblem -->
+                            <div class="flex -space-x-2 items-center pl-1">
+                                <div class="w-5 h-5 rounded-full bg-red-500 opacity-90 shadow-sm"></div>
+                                <div class="w-5 h-5 rounded-full bg-amber-400 opacity-85 shadow-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Chip & Card Number -->
+                    <div class="relative z-10 flex items-center justify-between mt-5">
+                        <!-- Gold Microchip Graphic -->
+                        <div
+                            class="w-9 h-7 rounded bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 p-0.5 flex flex-col justify-between shadow-inner">
+                            <div class="w-full h-[1px] bg-amber-800/40 my-auto"></div>
+                            <div class="w-full h-[1px] bg-amber-800/40 my-auto"></div>
+                        </div>
+                        <div class="text-label-md font-label-md tracking-[0.25em] text-[#8e8e93] font-mono">
+                            •••• 8832
+                        </div>
+                    </div>
+                    <!-- Balance & Dynamic Utilization Track -->
+                    <div class="relative z-10 mt-3 flex flex-col gap-1.5">
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <span class="text-label-sm font-label-sm text-[#8e8e93] font-light">Saldo actual</span>
+                                <div class="text-headline-md font-headline-md text-white font-bold tracking-tight">€
+                                    1.240,80</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-label-sm font-label-sm text-[#8e8e93]">Límite € 5.000,00</span>
+                            </div>
+                        </div>
+                        <!-- Progress Bar (25% Green Utilization) -->
+                        <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-0.5">
+                            <div class="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(48,209,88,0.5)]"
+                                style="width: 24.8%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Active Card Dynamic Hub -->
+            <div class="flex flex-col gap-space-lg">
+                <!-- Credit Status Pill Banner -->
+                <div
+                    class="w-full bg-[#1c1c1e] rounded-2xl p-space-md shadow-sm border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-space-sm">
+                        <div class="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[20px]"
+                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-label-sm font-label-sm text-[#8e8e93]">Crédito disponible</span>
+                            <span class="text-body-lg-bold font-body-lg-bold text-white font-semibold tracking-tight">€
+                                3.759,20</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-3 py-1 bg-[#2c2c2e] rounded-full border border-white/5">
+                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        <span class="text-label-sm font-label-sm text-white font-medium">Uso: 25%</span>
+                    </div>
+                </div>
+                <!-- Quick Info Tiles Grid -->
+                <div class="grid grid-cols-2 gap-space-sm">
+                    <div
+                        class="bg-[#1c1c1e] rounded-2xl p-space-md shadow-sm border border-white/5 flex flex-col justify-between gap-2">
+                        <div class="flex items-center gap-1.5 text-[#8e8e93]">
+                            <span class="material-symbols-outlined text-[18px]">event</span>
+                            <span class="text-label-sm font-label-sm">Próximo corte</span>
+                        </div>
+                        <div>
+                            <span
+                                class="inline-block px-2.5 py-1 rounded-full bg-[#2c2c2e] text-white text-label-md font-label-md font-semibold border border-white/5">28
+                                Sept</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-[#1c1c1e] rounded-2xl p-space-md shadow-sm border border-white/5 flex flex-col justify-between gap-2">
+                        <div class="flex items-center gap-1.5 text-[#8e8e93]">
+                            <span class="material-symbols-outlined text-[18px]">payments</span>
+                            <span class="text-label-sm font-label-sm">Pago mínimo</span>
+                        </div>
+                        <div class="text-body-lg-bold font-body-lg-bold text-white font-semibold">
+                            € 62,00
+                        </div>
+                    </div>
+                </div>
+                <!-- Tactile Action Square Buttons -->
+                <div class="grid grid-cols-4 gap-space-sm">
+                    <button
+                        class="flex flex-col items-center justify-center gap-1.5 bg-[#1c1c1e] rounded-2xl py-3 px-1 border border-white/5 shadow-sm active:scale-95 transition-transform">
+                        <div class="w-11 h-11 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+                        </div>
+                        <span class="text-label-sm font-label-sm text-white text-center line-clamp-1">Pagar</span>
+                    </button>
+                    <button
+                        class="flex flex-col items-center justify-center gap-1.5 bg-[#1c1c1e] rounded-2xl py-3 px-1 border border-white/5 shadow-sm active:scale-95 transition-transform"
+                        id="lockToggleBtn">
+                        <div class="w-11 h-11 rounded-full bg-[#2c2c2e] text-white flex items-center justify-center"
+                            id="lockIconWrap">
+                            <span class="material-symbols-outlined text-[22px]">lock_open</span>
+                        </div>
+                        <span class="text-label-sm font-label-sm text-white text-center line-clamp-1"
+                            id="lockStatusText">Bloquear</span>
+                    </button>
+                    <button
+                        class="flex flex-col items-center justify-center gap-1.5 bg-[#1c1c1e] rounded-2xl py-3 px-1 border border-white/5 shadow-sm active:scale-95 transition-transform">
+                        <div
+                            class="w-11 h-11 rounded-full bg-[#0a84ff]/15 text-[#0a84ff] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[22px]">tune</span>
+                        </div>
+                        <span class="text-label-sm font-label-sm text-white text-center line-clamp-1">Límites</span>
+                    </button>
+                    <button
+                        class="flex flex-col items-center justify-center gap-1.5 bg-[#1c1c1e] rounded-2xl py-3 px-1 border border-white/5 shadow-sm active:scale-95 transition-transform">
+                        <div class="w-11 h-11 rounded-full bg-[#2c2c2e] text-white flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[22px]">pin</span>
+                        </div>
+                        <span class="text-label-sm font-label-sm text-white text-center line-clamp-1">Ver PIN</span>
+                    </button>
+                </div>
+                <!-- Inset Grouped Activity Section -->
+                <div class="flex flex-col gap-space-sm mt-1">
+                    <div class="flex items-center justify-between px-1">
+                        <h4 class="text-body-lg-bold font-body-lg-bold text-white font-semibold tracking-tight">
+                            Movimientos con esta tarjeta</h4>
+                        <button class="text-primary text-label-md font-label-md font-semibold active:opacity-70">Ver
+                            todos</button>
+                    </div>
+                    <!-- Inset Group Container -->
+                    <div class="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-white/5 shadow-sm flex flex-col">
+                        <!-- Row 1: DiverXO -->
+                        <div
+                            class="flex items-center justify-between p-space-md hover:bg-[#2c2c2e]/60 transition-colors">
+                            <div class="flex items-center gap-space-md min-w-0">
+                                <div
+                                    class="w-11 h-11 rounded-xl bg-orange-950/60 text-orange-400 border border-orange-500/20 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined text-[24px]">restaurant</span>
+                                </div>
+                                <div class="flex flex-col min-w-0">
+                                    <span
+                                        class="text-body-md font-body-md text-white font-semibold truncate">Restaurante
+                                        DiverXO</span>
+                                    <span class="text-label-sm font-label-sm text-[#8e8e93]">Gastronomía • Hoy,
+                                        15:42</span>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="text-body-lg-bold font-body-lg-bold text-white font-bold">-€ 180,00</div>
+                                <span class="text-label-sm font-label-sm text-primary font-medium">+360 pts</span>
+                            </div>
+                        </div>
+                        <div class="h-[0.5px] bg-white/10 ml-16"></div>
+                        <!-- Row 2: Uber Technologies -->
+                        <div
+                            class="flex items-center justify-between p-space-md hover:bg-[#2c2c2e]/60 transition-colors">
+                            <div class="flex items-center gap-space-md min-w-0">
+                                <div
+                                    class="w-11 h-11 rounded-xl bg-zinc-800 text-zinc-300 border border-white/5 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined text-[24px]">directions_car</span>
+                                </div>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-body-md font-body-md text-white font-semibold truncate">Uber
+                                        Technologies</span>
+                                    <span class="text-label-sm font-label-sm text-[#8e8e93]">Transporte • Ayer,
+                                        22:15</span>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="text-body-lg-bold font-body-lg-bold text-white font-bold">-€ 18,40</div>
+                                <span class="text-label-sm font-label-sm text-[#8e8e93]">Completado</span>
+                            </div>
+                        </div>
+                        <div class="h-[0.5px] bg-white/10 ml-16"></div>
+                        <!-- Row 3: Zara Gran Vía -->
+                        <div
+                            class="flex items-center justify-between p-space-md hover:bg-[#2c2c2e]/60 transition-colors">
+                            <div class="flex items-center gap-space-md min-w-0">
+                                <div
+                                    class="w-11 h-11 rounded-xl bg-purple-950/60 text-purple-300 border border-purple-500/20 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+                                </div>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-body-md font-body-md text-white font-semibold truncate">Zara Gran
+                                        Vía</span>
+                                    <span class="text-label-sm font-label-sm text-[#8e8e93]">Moda y Ropa • 14 Sep</span>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="text-body-lg-bold font-body-lg-bold text-white font-bold">-€ 79,90</div>
+                                <span class="text-label-sm font-label-sm text-[#8e8e93]">3 cuotas s/i</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Digital Security Notice Pill -->
+                <div
+                    class="flex items-center justify-center gap-2 py-3 px-space-md rounded-full bg-[#1c1c1e] text-[#8e8e93] border border-white/5">
+                    <span class="material-symbols-outlined text-[17px] text-primary">verified_user</span>
+                    <span class="text-label-sm font-label-sm">Protección contra fraude activa con Apple Pay</span>
+                </div>
+            </div>
+        </div>
+        <script>
+            let activeIndex = 1;
+            const cards = [
+                document.getElementById('card-1'),
+                document.getElementById('card-2'),
+                document.getElementById('card-3')
+            ];
+
+            function updateCardStack() {
+                cards.forEach((card, idx) => {
+                    const cardNum = idx + 1;
+                    if (cardNum === activeIndex) {
+                        card.style.transform = 'translateY(76px) scale(1)';
+                        card.style.zIndex = '30';
+                        card.style.boxShadow = '0 20px 35px -8px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.12)';
+                    } else {
+                        const order = cardNum < activeIndex ? cardNum : cardNum - 1;
+                        const offset = (order - 1) * 38;
+                        const scale = 0.92 + (order * 0.035);
+                        card.style.transform = `translateY(${offset}px) scale(${scale})`;
+                        card.style.zIndex = (order * 10).toString();
+                        card.style.boxShadow = '0 8px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)';
+                    }
+                });
+            }
+
+            function selectCard(selected) {
+                if (activeIndex === selected) return;
+                activeIndex = selected;
+                updateCardStack();
+            }
+
+            // Interactive Card Lock Toggle
+            const lockBtn = document.getElementById('lockToggleBtn');
+            const lockIconWrap = document.getElementById('lockIconWrap');
+            const lockStatus = document.getElementById('lockStatusText');
+            let isLocked = false;
+
+            lockBtn.addEventListener('click', () => {
+                isLocked = !isLocked;
+                if (isLocked) {
+                    lockIconWrap.className = 'w-11 h-11 rounded-full bg-red-950/80 text-red-400 border border-red-500/30 flex items-center justify-center';
+                    lockIconWrap.innerHTML = '<span class="material-symbols-outlined text-[22px]">lock</span>';
+                    lockStatus.textContent = 'Bloqueada';
+                    lockStatus.classList.add('text-red-400', 'font-semibold');
+                } else {
+                    lockIconWrap.className = 'w-11 h-11 rounded-full bg-[#2c2c2e] text-white flex items-center justify-center';
+                    lockIconWrap.innerHTML = '<span class="material-symbols-outlined text-[22px]">lock_open</span>';
+                    lockStatus.textContent = 'Bloquear';
+                    lockStatus.classList.remove('text-red-400', 'font-semibold');
+                }
+            });
+        </script>
+    </main>
+    <nav class="fixed bottom-0 w-full z-50 pb-safe pointer-events-none" data-active-classes="text-primary">
+        <div class="px-margin pb-space-xs pointer-events-auto">
+            <div
+                class="relative flex items-center justify-around h-16 rounded-full bg-[#1c1c1e]/85 backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)] px-space-xs">
+                <a class="flex flex-col items-center justify-center w-14 h-11 text-[#8e8e93] hover:text-white transition-colors"
+                    data-path="resumen" href="#"><span
+                        class="material-symbols-outlined text-[24px]">format_list_bulleted</span><span
+                        class="text-label-sm font-label-sm">Resumen</span></a><a aria-current="page"
+                    class="flex flex-col items-center justify-center w-14 h-11 transition-colors text-primary"
+                    data-path="tarjetas" href="#"><span
+                        class="material-symbols-outlined text-[24px]">credit_card</span><span
+                        class="text-label-sm font-label-sm">Tarjetas</span></a>
+                <div class="flex items-center justify-center -mt-6"><a aria-label="Nueva transacción"
+                        class="w-13 h-13 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_6px_20px_rgba(48,209,88,0.4)] transition-transform active:scale-90 hover:opacity-95"
+                        data-path="nueva-transaccion" href="#"><span
+                            class="material-symbols-outlined text-[30px] font-bold">add</span></a></div><a
+                    class="flex flex-col items-center justify-center w-14 h-11 text-[#8e8e93] hover:text-white transition-colors"
+                    data-path="planificacion" href="#"><span
+                        class="material-symbols-outlined text-[24px]">pie_chart</span><span
+                        class="text-label-sm font-label-sm">Planificación</span></a><a
+                    class="flex flex-col items-center justify-center w-14 h-11 text-[#8e8e93] hover:text-white transition-colors"
+                    data-path="analisis" href="#"><span
+                        class="material-symbols-outlined text-[24px]">bar_chart</span><span
+                        class="text-label-sm font-label-sm">Análisis</span></a>
+            </div>
+            <div class="w-full flex justify-center pt-2 pb-1">
+                <div class="w-32 h-1 bg-white/20 rounded-full"></div>
+            </div>
+        </div>
+    </nav>
+</body>
+
+</html>

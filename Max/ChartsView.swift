@@ -3,9 +3,9 @@ import SwiftData
 import Charts
 
 struct ChartsView: View {
-    @Query private var transactions: [Transaction]
-    @Query private var cards: [CreditCard]
-
+    @Query(filter: #Predicate<Transaction> { !$0.isDeleted }) private var transactions: [Transaction]
+    @Query(filter: #Predicate<CreditCard> { !$0.isDeleted }) private var cards: [CreditCard]
+    
     private let calendar = Calendar.current
 
     private var currentMonth: Int { calendar.component(.month, from: .now) }
@@ -39,6 +39,7 @@ struct ChartsView: View {
         let purchases = cards
             .flatMap { $0.transactions }
             .filter {
+                !$0.isDeleted &&
                 $0.type == .purchase &&
                 calendar.component(.month, from: $0.date) == currentMonth &&
                 calendar.component(.year, from: $0.date) == currentYear
@@ -80,9 +81,16 @@ struct ChartsView: View {
     }
 
     private func usedCupo(for card: CreditCard) -> Double {
-        let purchases = card.transactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
-        let payments = card.transactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
+        let activeTransactions = card.transactions.filter { !$0.isDeleted }
+        let purchases = activeTransactions.filter { $0.type == .purchase }.reduce(0) { $0 + $1.amount }
+        let payments = activeTransactions.filter { $0.type == .payment }.reduce(0) { $0 + $1.amount }
         return purchases - payments
+    }
+
+    private func cupoProgressColor(_ ratio: Double) -> Color {
+        if ratio >= 0.9 { return .appExpense }
+        if ratio >= 0.7 { return .orange }
+        return .appAccent
     }
 
     // MARK: - Nuevas gráficas
@@ -123,7 +131,7 @@ struct ChartsView: View {
             $0.type == .expense && calendar.component(.year, from: $0.date) == currentYear
         }
         let cardPurchases = cards.flatMap { $0.transactions }.filter {
-            $0.type == .purchase && calendar.component(.year, from: $0.date) == currentYear
+            !$0.isDeleted && $0.type == .purchase && calendar.component(.year, from: $0.date) == currentYear
         }
 
         var totals: [String: Double] = [:]
@@ -157,227 +165,202 @@ struct ChartsView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading) {
-                        Text("Gastos por categoría (este mes)")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        if expensesByCategory.isEmpty {
-                            ContentUnavailableView(
-                                "Sin gastos este mes",
-                                systemImage: "chart.pie",
-                                description: Text("Agrega gastos para ver el desglose aquí.")
-                            )
-                            .frame(height: 200)
-                        } else {
-                            Chart(expensesByCategory) { item in
-                                SectorMark(
-                                    angle: .value("Total", item.total),
-                                    innerRadius: .ratio(0.6),
-                                    angularInset: 1.5
-                                )
-                                .foregroundStyle(by: .value("Categoría", item.category))
-                                .cornerRadius(4)
-                            }
-                            .frame(height: 260)
-                            .padding(.horizontal)
-                        }
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("Ingresos vs. Gastos (últimos 6 meses)")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        Chart(last6MonthsTotals) { item in
-                            BarMark(
-                                x: .value("Mes", item.monthLabel),
-                                y: .value("Total", item.total)
-                            )
-                            .foregroundStyle(by: .value("Tipo", item.type.rawValue))
-                            .position(by: .value("Tipo", item.type.rawValue))
-                        }
-                        .frame(height: 220)
-                        .padding(.horizontal)
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("Gastos con tarjeta por categoría (este mes)")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        if cardExpensesByCategory.isEmpty {
-                            ContentUnavailableView(
-                                "Sin compras con tarjeta este mes",
-                                systemImage: "creditcard",
-                                description: Text("Registra compras en tus tarjetas para ver el desglose aquí.")
-                            )
-                            .frame(height: 200)
-                        } else {
-                            Chart(cardExpensesByCategory) { item in
-                                SectorMark(
-                                    angle: .value("Total", item.total),
-                                    innerRadius: .ratio(0.6),
-                                    angularInset: 1.5
-                                )
-                                .foregroundStyle(by: .value("Categoría", item.category))
-                                .cornerRadius(4)
-                            }
-                            .frame(height: 260)
-                            .padding(.horizontal)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Uso de cupo por tarjeta")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        if cards.isEmpty {
-                            ContentUnavailableView(
-                                "Sin tarjetas",
-                                systemImage: "creditcard",
-                                description: Text("Agrega una tarjeta para ver su uso de cupo aquí.")
-                            )
-                            .frame(height: 150)
-                        } else {
-                            VStack(spacing: 16) {
-                                ForEach(cards) { card in
-                                    let used = usedCupo(for: card)
-                                    let ratio = card.creditLimit > 0 ? min(max(used / card.creditLimit, 0), 1) : 0
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack {
-                                            Text(card.name)
-                                                .font(.subheadline)
-                                            Spacer()
-                                            (Text(used, format: .currency(code: "COP"))
-                                                + Text(" / ")
-                                                + Text(card.creditLimit, format: .currency(code: "COP")))
-                                        }
-                                        .font(.caption)
-
-                                        ProgressView(value: ratio)
-                                            .tint(ratio >= 0.9 ? .red : .blue)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("Tendencia de balance mensual (\(String(currentYear)))")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        Chart(monthlyBalanceTrend) { item in
-                            LineMark(
-                                x: .value("Mes", item.monthLabel),
-                                y: .value("Balance", item.value)
-                            )
-                            .interpolationMethod(.catmullRom)
-                            PointMark(
-                                x: .value("Mes", item.monthLabel),
-                                y: .value("Balance", item.value)
-                            )
-                        }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                chartCard(title: "Gastos por categoría (este mes)") {
+                    if expensesByCategory.isEmpty {
+                        ContentUnavailableView(
+                            "Sin gastos este mes",
+                            systemImage: "chart.pie",
+                            description: Text("Agrega gastos para ver el desglose aquí.")
+                        )
                         .frame(height: 200)
-                        .padding(.horizontal)
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("Top 5 categorías de gasto (\(String(currentYear)))")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        if topCategories.isEmpty {
-                            ContentUnavailableView(
-                                "Sin datos todavía",
-                                systemImage: "list.number",
-                                description: Text("Agrega gastos o compras con tarjeta para ver el ranking aquí.")
+                    } else {
+                        Chart(expensesByCategory) { item in
+                            SectorMark(
+                                angle: .value("Total", item.total),
+                                innerRadius: .ratio(0.6),
+                                angularInset: 1.5
                             )
-                            .frame(height: 150)
-                        } else {
-                            Chart(topCategories) { item in
-                                BarMark(
-                                    x: .value("Total", item.total),
-                                    y: .value("Categoría", item.category)
-                                )
-                                .foregroundStyle(by: .value("Categoría", item.category))
-                            }
-                            .frame(height: CGFloat(topCategories.count * 40 + 20))
-                            .padding(.horizontal)
+                            .foregroundStyle(by: .value("Categoría", item.category))
+                            .cornerRadius(4)
                         }
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("Tendencia de ahorro mensual % (\(String(currentYear)))")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        Chart(monthlySavingsTrend) { item in
-                            LineMark(
-                                x: .value("Mes", item.monthLabel),
-                                y: .value("% Ahorro", item.value)
-                            )
-                            .interpolationMethod(.catmullRom)
-                            PointMark(
-                                x: .value("Mes", item.monthLabel),
-                                y: .value("% Ahorro", item.value)
-                            )
-                        }
-                        .frame(height: 200)
-                        .padding(.horizontal)
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Resumen del año \(String(currentYear))")
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        VStack(spacing: 8) {
-                            HStack {
-                                Text("Ingresos")
-                                Spacer()
-                                Text(yearIncome, format: .currency(code: "COP"))
-                                    .foregroundStyle(.green)
-                            }
-                            HStack {
-                                Text("Gastos")
-                                Spacer()
-                                Text(yearExpense, format: .currency(code: "COP"))
-                                    .foregroundStyle(.red)
-                            }
-                            HStack {
-                                Text("Balance")
-                                    .font(.headline)
-                                Spacer()
-                                Text(yearBalance, format: .currency(code: "COP"))
-                                    .font(.headline)
-                                    .foregroundStyle(yearBalance >= 0 ? .green : .red)
-                            }
-                            HStack {
-                                Text("% Ahorro")
-                                Spacer()
-                                (Text(yearSavingsPercentage, format: .number.precision(.fractionLength(1))) + Text("%"))
-                            }
-                            .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal)
+                        .frame(height: 260)
                     }
                 }
-                .padding(.vertical)
+
+                chartCard(title: "Ingresos vs. Gastos (últimos 6 meses)") {
+                    Chart(last6MonthsTotals) { item in
+                        BarMark(
+                            x: .value("Mes", item.monthLabel),
+                            y: .value("Total", item.total)
+                        )
+                        .foregroundStyle(by: .value("Tipo", item.type.rawValue))
+                        .position(by: .value("Tipo", item.type.rawValue))
+                    }
+                    .frame(height: 220)
+                }
+
+                chartCard(title: "Gastos con tarjeta por categoría (este mes)") {
+                    if cardExpensesByCategory.isEmpty {
+                        ContentUnavailableView(
+                            "Sin compras con tarjeta este mes",
+                            systemImage: "creditcard",
+                            description: Text("Registra compras en tus tarjetas para ver el desglose aquí.")
+                        )
+                        .frame(height: 200)
+                    } else {
+                        Chart(cardExpensesByCategory) { item in
+                            SectorMark(
+                                angle: .value("Total", item.total),
+                                innerRadius: .ratio(0.6),
+                                angularInset: 1.5
+                            )
+                            .foregroundStyle(by: .value("Categoría", item.category))
+                            .cornerRadius(4)
+                        }
+                        .frame(height: 260)
+                    }
+                }
+
+                chartCard(title: "Uso de cupo por tarjeta") {
+                    if cards.isEmpty {
+                        ContentUnavailableView(
+                            "Sin tarjetas",
+                            systemImage: "creditcard",
+                            description: Text("Agrega una tarjeta para ver su uso de cupo aquí.")
+                        )
+                        .frame(height: 150)
+                    } else {
+                        VStack(spacing: 16) {
+                            ForEach(cards) { card in
+                                let used = usedCupo(for: card)
+                                let ratio = card.creditLimit > 0 ? min(max(used / card.creditLimit, 0), 1) : 0
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(card.name)
+                                            .font(.subheadline)
+                                        Spacer()
+                                        Text("\(CurrencyFormat.string(for: used)) / \(CurrencyFormat.string(for: card.creditLimit))")
+                                    }
+                                    .font(.caption)
+                                    .foregroundStyle(Color.appTextSecondary)
+
+                                    ProgressView(value: ratio)
+                                        .tint(cupoProgressColor(ratio))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                chartCard(title: "Tendencia de balance mensual (\(String(currentYear)))") {
+                    Chart(monthlyBalanceTrend) { item in
+                        LineMark(
+                            x: .value("Mes", item.monthLabel),
+                            y: .value("Balance", item.value)
+                        )
+                        .foregroundStyle(Color.appAccent)
+                        .interpolationMethod(.catmullRom)
+                        PointMark(
+                            x: .value("Mes", item.monthLabel),
+                            y: .value("Balance", item.value)
+                        )
+                        .foregroundStyle(Color.appAccent)
+                    }
+                    .frame(height: 200)
+                }
+
+                chartCard(title: "Top 5 categorías de gasto (\(String(currentYear)))") {
+                    if topCategories.isEmpty {
+                        ContentUnavailableView(
+                            "Sin datos todavía",
+                            systemImage: "list.number",
+                            description: Text("Agrega gastos o compras con tarjeta para ver el ranking aquí.")
+                        )
+                        .frame(height: 150)
+                    } else {
+                        Chart(topCategories) { item in
+                            BarMark(
+                                x: .value("Total", item.total),
+                                y: .value("Categoría", item.category)
+                            )
+                            .foregroundStyle(by: .value("Categoría", item.category))
+                        }
+                        .frame(height: CGFloat(topCategories.count * 40 + 20))
+                    }
+                }
+
+                chartCard(title: "Tendencia de ahorro mensual % (\(String(currentYear)))") {
+                    Chart(monthlySavingsTrend) { item in
+                        LineMark(
+                            x: .value("Mes", item.monthLabel),
+                            y: .value("% Ahorro", item.value)
+                        )
+                        .foregroundStyle(Color.appAccent)
+                        .interpolationMethod(.catmullRom)
+                        PointMark(
+                            x: .value("Mes", item.monthLabel),
+                            y: .value("% Ahorro", item.value)
+                        )
+                        .foregroundStyle(Color.appAccent)
+                    }
+                    .frame(height: 200)
+                }
+
+                chartCard(title: "Resumen del año \(String(currentYear))") {
+                    VStack(spacing: 10) {
+                        HStack {
+                            Text("Ingresos")
+                            Spacer()
+                            Text(CurrencyFormat.string(for: yearIncome))
+                                .foregroundStyle(Color.appIncome)
+                        }
+                        HStack {
+                            Text("Gastos")
+                            Spacer()
+                            Text(CurrencyFormat.string(for: yearExpense))
+                                .foregroundStyle(Color.appExpense)
+                        }
+                        HStack {
+                            Text("Balance")
+                                .font(.headline)
+                            Spacer()
+                            Text(CurrencyFormat.string(for: yearBalance))
+                                .font(.headline)
+                                .foregroundStyle(yearBalance >= 0 ? Color.appIncome : Color.appExpense)
+                        }
+                        HStack {
+                            Text("% Ahorro")
+                            Spacer()
+                            (Text(yearSavingsPercentage, format: .number.precision(.fractionLength(1))) + Text("%"))
+                        }
+                        .foregroundStyle(Color.appTextSecondary)
+                    }
+                }
             }
-            .navigationTitle("Gráficas")
+            .padding(.vertical)
+            .padding(.horizontal)
         }
+        .background(Color.appBackground)
+    }
+
+    @ViewBuilder
+    private func chartCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+            content()
+        }
+        .floatingCardStyle()
     }
 }
 
 #Preview {
-    ChartsView()
-        .modelContainer(for: [Transaction.self, CreditCard.self, CardTransaction.self], inMemory: true)
+    NavigationStack {
+        ChartsView()
+            .navigationTitle("Gráficas")
+    }
+    .modelContainer(for: [Transaction.self, CreditCard.self, CardTransaction.self], inMemory: true)
 }

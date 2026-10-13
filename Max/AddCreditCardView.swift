@@ -15,19 +15,18 @@ struct AddCreditCardView: View {
     var cardToEdit: CreditCard?
 
     @State private var name: String = ""
-    @State private var creditLimitText: String = ""
+    @State private var creditLimit: Double = 0
     @State private var closingDayText: String = ""
     @State private var interestRateText: String = ""
-    @State private var managementFeeText: String = ""
+    @State private var managementFee: Double = 0
 
     private var isEditing: Bool { cardToEdit != nil }
 
     private var isValid: Bool {
         guard !name.isEmpty else { return false }
-        guard let limit = Double(creditLimitText), limit > 0 else { return false }
+        guard creditLimit > 0 else { return false }
         guard let day = Int(closingDayText), day >= 1, day <= 31 else { return false }
         guard Double(interestRateText) != nil else { return false }
-        guard Double(managementFeeText) != nil else { return false }
         return true
     }
 
@@ -37,8 +36,7 @@ struct AddCreditCardView: View {
                 Section("Datos de la tarjeta") {
                     TextField("Nombre (ej. Bancolombia Visa)", text: $name)
 
-                    TextField("Cupo total", text: $creditLimitText)
-                        .keyboardType(.decimalPad)
+                    AmountField(placeholder: "Cupo total", value: $creditLimit)
 
                     TextField("Día de corte (1-31)", text: $closingDayText)
                         .keyboardType(.numberPad)
@@ -46,10 +44,12 @@ struct AddCreditCardView: View {
                     TextField("Tasa de interés mensual (%)", text: $interestRateText)
                         .keyboardType(.decimalPad)
 
-                    TextField("Cuota de manejo", text: $managementFeeText)
-                        .keyboardType(.decimalPad)
+                    AmountField(placeholder: "Cuota de manejo", value: $managementFee)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .tint(Color.appAccent)
             .navigationTitle(isEditing ? "Editar tarjeta" : "Nueva tarjeta")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -58,34 +58,35 @@ struct AddCreditCardView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") { save() }
                         .disabled(!isValid)
+                        .fontWeight(.semibold)
                 }
             }
             .onAppear {
                 if let card = cardToEdit {
                     name = card.name
-                    creditLimitText = String(Int(card.creditLimit))
+                    creditLimit = card.creditLimit
                     closingDayText = String(card.closingDay)
                     interestRateText = String(card.monthlyInterestRate)
-                    managementFeeText = String(Int(card.managementFee))
+                    managementFee = card.managementFee
                 }
             }
         }
     }
 
     private func save() {
-        guard let limit = Double(creditLimitText),
-              let day = Int(closingDayText),
-              let rate = Double(interestRateText),
-              let fee = Double(managementFeeText) else { return }
+        guard let day = Int(closingDayText),
+              let rate = Double(interestRateText) else { return }
 
         if let card = cardToEdit {
             card.name = name
-            card.creditLimit = limit
+            card.creditLimit = creditLimit
             card.closingDay = day
             card.monthlyInterestRate = rate
-            card.managementFee = fee
+            card.managementFee = managementFee
+            card.updatedAt = .now
+            card.needsSync = true
         } else {
-            let card = CreditCard(name: name, creditLimit: limit, closingDay: day, monthlyInterestRate: rate, managementFee: fee)
+            let card = CreditCard(name: name, creditLimit: creditLimit, closingDay: day, monthlyInterestRate: rate, managementFee: managementFee)
             modelContext.insert(card)
         }
         dismiss()
