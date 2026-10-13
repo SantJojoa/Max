@@ -43,6 +43,12 @@ struct Provider: TimelineProvider {
     }
 }
 
+private extension Color {
+    static let widgetGreen = Color(red: 0.204, green: 0.78, blue: 0.349)
+    static let widgetRed = Color(red: 1.0, green: 0.27, blue: 0.227)
+    static let widgetMuted = Color(red: 0.61, green: 0.67, blue: 0.80)
+}
+
 struct MaxWidgetsEntryView: View {
     var entry: Provider.Entry
 
@@ -50,13 +56,14 @@ struct MaxWidgetsEntryView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Balance")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text("BALANCE")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .tracking(1)
+                        .foregroundStyle(Color.widgetMuted)
 
                     Text(CurrencyFormat.string(for: entry.balance))
-                        .font(.title3.bold())
-                        .foregroundStyle(entry.balance >= 0 ? .green : .red)
+                        .font(.system(.title3, design: .rounded, weight: .heavy))
+                        .foregroundStyle(entry.balance >= 0 ? Color.white : Color.widgetRed)
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
                 }
@@ -64,10 +71,11 @@ struct MaxWidgetsEntryView: View {
                 Spacer()
 
                 Button(intent: QuickAddIntent()) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 30))
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, .green)
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.black)
+                        .frame(width: 32, height: 32)
+                        .background(Color.widgetGreen, in: Circle())
                 }
                 .buttonStyle(.plain)
             }
@@ -75,20 +83,20 @@ struct MaxWidgetsEntryView: View {
             Spacer(minLength: 4)
 
             HStack(spacing: 4) {
-                Image(systemName: "arrow.down.circle.fill")
+                Image(systemName: "arrow.down.left.circle.fill")
                 Text(CurrencyFormat.string(for: entry.income, decimals: 0))
             }
-            .font(.caption2)
-            .foregroundStyle(.green)
+            .font(.system(.caption2, design: .rounded, weight: .semibold))
+            .foregroundStyle(Color.widgetGreen)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
 
             HStack(spacing: 4) {
-                Image(systemName: "arrow.up.circle.fill")
+                Image(systemName: "arrow.up.right.circle.fill")
                 Text(CurrencyFormat.string(for: entry.expense, decimals: 0))
             }
-            .font(.caption2)
-            .foregroundStyle(.red)
+            .font(.system(.caption2, design: .rounded, weight: .semibold))
+            .foregroundStyle(Color.widgetRed)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
         }
@@ -103,7 +111,13 @@ struct MaxWidgets: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             MaxWidgetsEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(for: .widget) {
+                    LinearGradient(
+                        colors: [Color(red: 0.07, green: 0.12, blue: 0.24), Color(red: 0.04, green: 0.07, blue: 0.14)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
         }
         .configurationDisplayName("Balance de Max")
         .description("Muestra tu balance, ingresos y gastos actuales.")

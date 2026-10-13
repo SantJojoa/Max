@@ -4,7 +4,9 @@ import SwiftData
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Transaction> { !$0.isDeleted }, sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    var onNavigate: (MainTabView.AppTab) -> Void = { _ in }
     @State private var showingAddView = false
+    @State private var addType: TransactionType = .expense
     @State private var editingTransaction: Transaction?
     @AppStorage("hideBalance") private var hideBalance = false
 
@@ -121,6 +123,13 @@ struct ContentView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: Spacing.s, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))
 
+                Section {
+                    quickActions
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))
+
                 if filteredTransactions.isEmpty {
                     Section {
                         ContentUnavailableView(
@@ -175,7 +184,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingAddView) {
-                AddTransactionView()
+                AddTransactionView(initialType: addType)
             }
             .sheet(item: $editingTransaction) { transaction in
                 AddTransactionView(transactionToEdit: transaction)
@@ -281,6 +290,46 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.white.opacity(0.07))
         .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
+    }
+
+    // MARK: - Acciones rápidas
+
+    private var quickActions: some View {
+        HStack {
+            quickAction(title: "Gasto", icon: "arrow.up.right", tint: .appExpense) {
+                addType = .expense
+                showingAddView = true
+            }
+            quickAction(title: "Ingreso", icon: "arrow.down.left", tint: .appIncome) {
+                addType = .income
+                showingAddView = true
+            }
+            quickAction(title: "Presupuesto", icon: "chart.pie.fill", tint: .appOrange) {
+                onNavigate(.planificacion)
+            }
+            quickAction(title: "Análisis", icon: "chart.bar.fill", tint: .appBlue) {
+                onNavigate(.analisis)
+            }
+        }
+    }
+
+    private func quickAction(title: String, icon: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 56, height: 56)
+                    .glassEffect(.regular.tint(tint.opacity(0.18)).interactive(), in: Circle())
+                Text(title)
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(Color.appTextPrimary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: showingAddView)
     }
 
     // MARK: - Filtro

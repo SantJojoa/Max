@@ -62,7 +62,9 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            ContentView()
+            ContentView(onNavigate: { tab in
+                withAnimation(.snappy(duration: 0.2)) { selection = tab }
+            })
                 .tag(AppTab.resumen)
                 .toolbar(.hidden, for: .tabBar)
 

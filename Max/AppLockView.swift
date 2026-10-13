@@ -8,15 +8,17 @@ struct AppLockView: View {
 
     var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
+            AppBackground()
 
             VStack(spacing: 24) {
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 48))
+                Image(systemName: "faceid")
+                    .font(.system(size: 44, weight: .light))
                     .foregroundStyle(Color.appAccent)
+                    .frame(width: 96, height: 96)
+                    .glassEffect(.regular.tint(Color.appAccent.opacity(0.15)), in: Circle())
 
                 Text("Max está bloqueada")
-                    .font(.title2.bold())
+                    .font(.system(.title2, design: .rounded, weight: .bold))
                     .foregroundStyle(Color.appTextPrimary)
 
                 if let errorMessage {

@@ -17,9 +17,11 @@ struct SettingsView: View {
         List {
             Section {
                 VStack(spacing: 12) {
-                    Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                        .font(.system(size: 36))
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(Color.appAccent)
+                        .frame(width: 64, height: 64)
+                        .glassEffect(.regular.tint(Color.appAccent.opacity(0.15)), in: Circle())
 
                     Button {
                         Task {
@@ -53,12 +55,12 @@ struct SettingsView: View {
                 NavigationLink {
                     CategoriesView()
                 } label: {
-                    settingsRow(title: "Gestionar categorías", icon: "tag.fill", tint: .orange)
+                    settingsRow(title: "Gestionar categorías", icon: "tag.fill", tint: .appOrange)
                 }
                 NavigationLink {
                     CurrencySettingsView()
                 } label: {
-                    settingsRow(title: "Moneda", icon: "banknote.fill", tint: .green)
+                    settingsRow(title: "Moneda", icon: "banknote.fill", tint: .appAccent)
                 }
             }
             .listRowBackground(Color.appCardBackground)
@@ -109,6 +111,7 @@ struct SettingsView: View {
         HStack(spacing: Spacing.m) {
             IconBadge(systemImage: icon, tint: tint)
             Text(title)
+                .font(.system(.body, design: .rounded, weight: .medium))
                 .foregroundStyle(Color.appTextPrimary)
             Spacer()
             if let trailing {

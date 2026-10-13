@@ -9,21 +9,23 @@ struct AuthView: View {
 
     var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
+            AppBackground()
 
             ScrollView {
                 VStack(spacing: 32) {
                     VStack(spacing: 12) {
                         Image(systemName: "chart.pie.fill")
-                            .font(.system(size: 48))
+                            .font(.system(size: 44, weight: .semibold))
                             .foregroundStyle(Color.appAccent)
+                            .frame(width: 88, height: 88)
+                            .glassEffect(.regular.tint(Color.appAccent.opacity(0.15)), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
 
                         Text("Max")
-                            .font(.largeTitle.bold())
+                            .font(.system(size: 40, weight: .heavy, design: .rounded))
                             .foregroundStyle(Color.appTextPrimary)
 
-                        Text("Controla tus finanzas")
-                            .font(.subheadline)
+                        Text("Controla tus finanzas sin complicarte")
+                            .font(.system(.subheadline, design: .rounded, weight: .medium))
                             .foregroundStyle(Color.appTextSecondary)
                     }
                     .padding(.top, 60)
@@ -68,10 +70,13 @@ struct AuthView: View {
                                 .foregroundStyle(Color.appAccent)
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(24)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Radius.xlarge, style: .continuous))
+                    .padding(.horizontal, 20)
                 }
             }
         }
+        .fontDesign(.rounded)
     }
 
     private var canSubmit: Bool {

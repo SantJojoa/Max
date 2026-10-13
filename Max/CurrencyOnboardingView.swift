@@ -11,12 +11,15 @@ struct CurrencyOnboardingView: View {
             VStack(spacing: 0) {
                 VStack(spacing: 8) {
                     Image(systemName: "banknote.fill")
-                        .font(.system(size: 44))
+                        .font(.system(size: 36))
                         .foregroundStyle(Color.appAccent)
+                        .frame(width: 80, height: 80)
+                        .glassEffect(.regular.tint(Color.appAccent.opacity(0.15)), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .padding(.top, 24)
 
                     Text("¿En qué moneda quieres usar Max?")
-                        .font(.title3.weight(.semibold))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .foregroundStyle(Color.appTextPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
 
@@ -36,6 +39,7 @@ struct CurrencyOnboardingView: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(currency.displayName)
+                                        .font(.system(.body, design: .rounded, weight: .semibold))
                                         .foregroundStyle(Color.appTextPrimary)
                                     Text("\(currency.code) · \(currency.symbol)")
                                         .font(.caption)
@@ -48,10 +52,10 @@ struct CurrencyOnboardingView: View {
                                 }
                             }
                         }
-                        .listRowBackground(Color.appCardBackground)
+                        .listRowBackground(selected == currency ? Color.appAccent.opacity(0.15) : Color.appCardBackground)
                     }
                 }
-                .listStyle(.plain)
+                .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
 
                 Button {

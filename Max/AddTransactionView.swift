@@ -6,6 +6,7 @@ struct AddTransactionView: View {
     @Environment(\.dismiss) private var dismiss
 
     var transactionToEdit: Transaction?
+    var initialType: TransactionType = .expense
 
     @State private var digits: String = ""
     @State private var type: TransactionType = .expense
@@ -86,6 +87,7 @@ struct AddTransactionView: View {
                 }
             }
             .onAppear {
+                if transactionToEdit == nil { type = initialType }
                 if let transaction = transactionToEdit {
                     digits = AmountField.Coordinator.digits(from: transaction.amount, currency: currency)
                     type = transaction.type
@@ -270,6 +272,7 @@ struct AddTransactionView: View {
             checkBudgetAndNotify(category: category, amount: amount)
         }
 
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
         dismiss()
     }
 

@@ -31,7 +31,16 @@ struct CategoriesView: View {
                         .foregroundStyle(Color.appTextSecondary)
                 } else {
                     ForEach(filteredCategories) { category in
-                        Text(category.name)
+                        HStack(spacing: 12) {
+                            CategoryIcon(name: category.name, size: 34)
+                            Text(category.name)
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                                .foregroundStyle(Color.appTextPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.appTextSecondary)
+                        }
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 editingCategory = category

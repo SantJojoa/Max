@@ -30,27 +30,33 @@ struct CreditCardsView: View {
                         description: Text("Toca + para agregar tu primera tarjeta de crédito.")
                     )
                 } else {
-                    List {
-                        ForEach(cards) { card in
-                            NavigationLink(destination: CardDetailView(card: card)) {
-                                cardRow(card)
-                            }
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                            .swipeActions(edge: .leading) {
-                                Button {
-                                    editingCard = card
-                                } label: {
-                                    Label("Editar", systemImage: "pencil")
+                    ScrollView {
+                        VStack(spacing: -112) {
+                            ForEach(Array(cards.enumerated()), id: \.element.persistentModelID) { index, card in
+                                NavigationLink(destination: CardDetailView(card: card)) {
+                                    cardRow(card)
                                 }
-                                .tint(.blue)
+                                .buttonStyle(.plain)
+                                .zIndex(Double(index))
+                                .contextMenu {
+                                    Button {
+                                        editingCard = card
+                                    } label: {
+                                        Label("Editar", systemImage: "pencil")
+                                    }
+                                    Button(role: .destructive) {
+                                        delete(card)
+                                    } label: {
+                                        Label("Eliminar", systemImage: "trash")
+                                    }
+                                }
                             }
                         }
-                        .onDelete(perform: deleteCards)
+                        .padding(.horizontal, Spacing.l)
+                        .padding(.top, Spacing.s)
+                        .padding(.bottom, Spacing.xxl)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
+                    .scrollIndicators(.hidden)
                 }
             }
             .background { AppBackground() }
@@ -133,6 +139,7 @@ struct CreditCardsView: View {
             }
         }
         .padding(Spacing.l)
+        .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
         .background(
             LinearGradient(colors: Self.gradients[index], startPoint: .topLeading, endPoint: .bottomTrailing)
         )
@@ -144,17 +151,14 @@ struct CreditCardsView: View {
         .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
     }
 
-    private func deleteCards(at offsets: IndexSet) {
-        for index in offsets {
-            let card = cards[index]
-            card.isDeleted = true
-            card.updatedAt = .now
-            card.needsSync = true
-            for transaction in card.transactions {
-                transaction.isDeleted = true
-                transaction.updatedAt = .now
-                transaction.needsSync = true
-            }
+    private func delete(_ card: CreditCard) {
+        card.isDeleted = true
+        card.updatedAt = .now
+        card.needsSync = true
+        for transaction in card.transactions {
+            transaction.isDeleted = true
+            transaction.updatedAt = .now
+            transaction.needsSync = true
         }
     }
 }
